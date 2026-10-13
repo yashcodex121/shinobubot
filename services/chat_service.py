@@ -21,7 +21,7 @@ log = logging.getLogger("nova")
 # ---------- Gemini setup ----------
 genai.configure(api_key=config.GEMINI_API_KEY)
 _model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.0-flash",
     generation_config=genai.GenerationConfig(
         temperature=1.05,
         top_p=0.95,
