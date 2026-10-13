@@ -150,11 +150,25 @@ async def cmd_chatty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def _is_group_admin(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> bool:
+    """Check if user is admin in the group OR in bot's admin list."""
+    user_id = update.effective_user.id
+    # Bot admin IDs always pass
+    if await is_admin(user_id):
+        return True
+    # Check Telegram group admin status
+    try:
+        member = await ctx.bot.get_chat_member(update.effective_chat.id, user_id)
+        return member.status in ("administrator", "creator")
+    except Exception:
+        return False
+
+
 async def cmd_groupbot(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
     if _is_private(update):
         return await msg.reply_text("This command works in groups only.")
-    if not await is_admin(update.effective_user.id):
+    if not await _is_group_admin(update, ctx):
         return await msg.reply_text("❌ Only group admins can use this.")
     args = ctx.args
     if not args or args[0].lower() not in ("on", "off"):
@@ -169,7 +183,7 @@ async def cmd_groupmode(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
     if _is_private(update):
         return await msg.reply_text("This command works in groups only.")
-    if not await is_admin(update.effective_user.id):
+    if not await _is_group_admin(update, ctx):
         return await msg.reply_text("❌ Only group admins can use this.")
     args = ctx.args
     valid = ("quiet", "chatty", "normal")
