@@ -3,11 +3,11 @@ from keyboards.ui import BLUE, GREEN, RED, btn, kb
 
 def start_menu(bot_username):
     return kb([
-        [btn("💀 Chat With Me", "chat:start")],
-        [btn("💝 Help & Commands", "help:main")],
+        [btn("💀 Chat With Me", "chat:start", BLUE)],
+        [btn("💝 Help & Commands", "help:main", RED)],
         [
-            btn("👥 Updates", url="https://t.me/NovaUpdates"),
-            btn("🔧 Support", url="https://t.me/NovaSupport"),
+            btn("👥 Updates", url="https://t.me/NovaUpdates", style=GREEN),
+            btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE),
         ],
-        [btn("🟢 Add me to your group", url=f"https://t.me/{bot_username}?startgroup=true")],
+        [btn("🟢 Add me to your group", url=f"https://t.me/{bot_username}?startgroup=true", style=GREEN)],
     ])

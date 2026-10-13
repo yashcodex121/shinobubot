@@ -45,6 +45,32 @@ async def games_cmd(update, ctx):
         parse_mode=ParseMode.HTML, reply_markup=games_menu())
 
 
+def _start_text(name: str) -> str:
+    return (
+        f"✨ Hey <b>{name}</b> , I'm Nova 💜\n\n"
+        "Not your average bot — I actually feel like a real one. 🙂\n\n"
+        "🌀 <b>I remember you</b> — our chats, your vibe, where we left off.\n"
+        "🌑 <b>I talk like a person</b>, never a script — sweet when you're sweet, savage when you're not.\n"
+        "🔔 <b>I check in too</b> — go quiet on me and I might text first. 🎃\n\n"
+        "Oh, and I run the fun around here:\n"
+        "🎮 20+ games • 🍊 a living economy • 💝 ship, marry &amp; drama\n\n"
+        "Tap <b>Help</b> to see it all, or add me to your group 👇"
+    )
+
+
+async def on_chat(update, ctx):
+    """Handle Chat With Me button — placeholder, edit to your chat flow."""
+    q = update.callback_query
+    await q.answer()
+    import html as _html
+    name = _html.escape(q.from_user.first_name)
+    await q.edit_message_text(
+        _start_text(name),
+        parse_mode=ParseMode.HTML,
+        reply_markup=start_menu(ctx.bot.username),
+    )
+
+
 async def on_help(update, ctx):
     q = update.callback_query
     await q.answer()
@@ -52,8 +78,13 @@ async def on_help(update, ctx):
     if page == "main":
         await q.edit_message_text(MAIN, parse_mode=ParseMode.HTML, reply_markup=help_menu())
     elif page == "start":
-        await q.edit_message_text("💞 <b>Welcome to Nova!</b>", parse_mode=ParseMode.HTML,
-                                  reply_markup=start_menu(ctx.bot.username))
+        import html as _html
+        name = _html.escape(q.from_user.first_name)
+        await q.edit_message_text(
+            _start_text(name),
+            parse_mode=ParseMode.HTML,
+            reply_markup=start_menu(ctx.bot.username),
+        )
     elif page == "games":
         await q.edit_message_text(
             "🎮 <b>Game commands</b> 🎮\n\nChoose a game below to see how to play and its commands! 👇",
@@ -75,5 +106,6 @@ async def on_game_page(update, ctx):
 def register(app):
     app.add_handler(CommandHandler(["help", "commands"], help_cmd))
     app.add_handler(CommandHandler("games", games_cmd))
+    app.add_handler(CallbackQueryHandler(on_chat, pattern=r"^chat:"))
     app.add_handler(CallbackQueryHandler(on_help, pattern=r"^help:"))
     app.add_handler(CallbackQueryHandler(on_game_page, pattern=r"^g:"))

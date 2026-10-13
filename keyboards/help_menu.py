@@ -6,9 +6,12 @@ def help_menu():
         [btn("🎮 Games", "help:games", BLUE), btn("⚡ Actions", "help:actions", RED)],
         [btn("💰 Economy", "help:economy", GREEN), btn("💗 Romance", "help:romance", RED)],
         [btn("🛡️ Admins", "help:admins", BLUE)],
-        [btn("⬅️ Back to Main", "help:start")],
+        [btn("⬅️ Back to Main", "help:start", GREEN)],
     ])
 
 
 def back_to_help():
-    return kb([[btn("⬅️ Back to categories", "help:main", RED)]])
+    return kb([
+        [btn("⬅️ Back to categories", "help:main", BLUE)],
+        [btn("🏠 Main Menu", "help:start", GREEN)],
+    ])
