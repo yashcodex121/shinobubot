@@ -8,16 +8,23 @@ def _ids(name):
     return {int(x) for x in os.getenv(name, "").replace(" ", "").split(",") if x.isdigit()}
 
 
+def _keys(name):
+    """Parse comma-separated API keys from env."""
+    raw = os.getenv(name, "")
+    return [k.strip() for k in raw.split(",") if k.strip()]
+
+
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "nova_bot")
 OWNER_IDS = _ids("OWNER_IDS")
 ADMIN_IDS = _ids("ADMIN_IDS") | OWNER_IDS
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # ---- Chat / AI ----
+GROQ_API_KEYS = _keys("GROQ_API_KEYS")   # comma-separated, supports multiple keys
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")  # fallback if Groq fails
 CHAT_MEMORY_LIMIT = 20        # messages to keep per user
-CHAT_TYPING_DELAY = 1.2       # seconds to simulate typing
+CHAT_TYPING_DELAY = 1.0       # seconds to simulate typing
 
 # ---- Economy (owner configurable) ----
 START_CASH = 1000
