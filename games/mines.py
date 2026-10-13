@@ -43,13 +43,13 @@ async def mines(update, ctx):
     u = update.effective_user
     bet = parse_amount(ctx.args)
     if not bet or bet < config.MINES_MIN_BET:
-        return await update.effective_message.reply_text(f"Usage: /mines <bet> (min ${config.MINES_MIN_BET})")
+        return await update.effective_message.reply_text(f"Usage: /mines &lt;bet&gt; (min ${config.MINES_MIN_BET})")
     await users.ensure_user(u)
     if not await users.take_balance(u.id, bet, "mines_bet"):
         return await update.effective_message.reply_text("❌ Not enough balance.")
     g = {"uid": u.id, "bet": bet, "open": set(), "mines": set(random.sample(range(N), config.MINES_COUNT))}
     m = await update.effective_message.reply_text(
-        f"💣 <b>Mines</b> — bet <b>${bet:,}</b>, {config.MINES_COUNT} mines hidden.\nPick a tile!",
+        f"💣 <b>Mines</b> — wager <b>${bet:,}</b>, {config.MINES_COUNT} mines hidden.\nPick a tile!",
         parse_mode=ParseMode.HTML, reply_markup=build(g))
     SESSIONS[(m.chat_id, m.message_id)] = g
 
