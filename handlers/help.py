@@ -58,16 +58,34 @@ def _start_text(name: str) -> str:
     )
 
 
+CHAT_TEXT = (
+    "💀 <b>Chatting With Nova</b>\n\n"
+    "I'm not your average bot — I actually <b>remember you</b>. As we talk, I quietly save the things worth keeping "
+    "(what you're into, what's going on with you) so you never repeat yourself. No setup, no format — just talk to me, "
+    "and the more we chat, the better I know you. 🖤\n\n"
+    "🔔 <b>Check-ins &amp; reactions</b>\n"
+    "<code>/checkins on|off</code> — my occasional check-ins\n"
+    "<code>/reactions on|off</code> — emoji reactions on your messages\n\n"
+    "👥 <b>In group chats</b>\n"
+    "I reply when you @mention me, call my name, or reply to me — otherwise I chime in now and then (never spam).\n"
+    "<code>/quiet</code> — I'll hang back (just for you)\n"
+    "<code>/chatty</code> — I'll join in more (just for you)\n\n"
+    "🔧 <b>Group admins</b>\n"
+    "<code>/groupbot on|off</code> — turn me on/off for the whole group\n"
+    "<code>/groupmode quiet|chatty|normal</code> — set how chatty I am for everyone\n\n"
+    "<i>An admin's choice takes priority over personal /quiet or /chatty.</i>"
+)
+
+
 async def on_chat(update, ctx):
-    """Handle Chat With Me button — placeholder, edit to your chat flow."""
     q = update.callback_query
     await q.answer()
-    import html as _html
-    name = _html.escape(q.from_user.first_name)
+    from keyboards.ui import RED, btn, kb
+    back_kb = kb([[btn("◀️ Back", "help:start", RED)]])
     await q.edit_message_text(
-        _start_text(name),
+        CHAT_TEXT,
         parse_mode=ParseMode.HTML,
-        reply_markup=start_menu(ctx.bot.username),
+        reply_markup=back_kb,
     )
 
 
