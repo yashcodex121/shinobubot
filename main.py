@@ -3,7 +3,7 @@ from telegram.ext import Application
 
 import config
 from database import mongo
-from handlers import actions, admin, economy, games, help as help_h, romance, start
+from handlers import actions, admin, chat, economy, games, help as help_h, romance, start
 from utils.logger import log
 
 
@@ -26,10 +26,10 @@ def main():
     if not config.BOT_TOKEN:
         raise SystemExit("Set BOT_TOKEN in .env")
     app = Application.builder().token(config.BOT_TOKEN).post_init(post_init).build()
-    for m in (admin, start, help_h, economy, actions, romance, games):
+    for m in (admin, start, help_h, economy, actions, romance, games, chat):
         m.register(app)
     app.add_error_handler(on_error)
-    app.run_polling(allowed_updates=["message", "callback_query"])
+    app.run_polling(allowed_updates=["message", "callback_query", "message_reaction"])
 
 
 if __name__ == "__main__":
