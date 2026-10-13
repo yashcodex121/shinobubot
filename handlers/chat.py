@@ -154,7 +154,7 @@ async def cmd_groupbot(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
     if _is_private(update):
         return await msg.reply_text("This command works in groups only.")
-    if not await is_admin(update, ctx):
+    if not await is_admin(update.effective_user.id):
         return await msg.reply_text("❌ Only group admins can use this.")
     args = ctx.args
     if not args or args[0].lower() not in ("on", "off"):
@@ -169,7 +169,7 @@ async def cmd_groupmode(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
     if _is_private(update):
         return await msg.reply_text("This command works in groups only.")
-    if not await is_admin(update, ctx):
+    if not await is_admin(update.effective_user.id):
         return await msg.reply_text("❌ Only group admins can use this.")
     args = ctx.args
     valid = ("quiet", "chatty", "normal")
