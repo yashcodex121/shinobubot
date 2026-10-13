@@ -3,6 +3,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from database import mongo, users
 from keyboards.ui import BLUE, GREEN, RED, btn, kb
+from utils.helpers import safe_answer
 from utils.validators import mention, reply_target
 
 GAMES = {}  # (chat_id, message_id) -> state
@@ -55,23 +56,23 @@ async def on_move(update, ctx):
     g = GAMES.get(key)
     arg = q.data.split(":")[1]
     if not g:
-        return await q.answer("Game expired.", show_alert=True)
+        return await safe_answer(q, "Game expired.", show_alert=True)
     if arg == "x":
-        return await q.answer()
+        return await safe_answer(q)
     if arg == "re":
         if q.from_user.id not in (g["p"]["X"].id, g["p"]["O"].id):
-            return await q.answer("Only players can rematch.", show_alert=True)
+            return await safe_answer(q, "Only players can rematch.", show_alert=True)
         g["p"] = {"X": g["p"]["O"], "O": g["p"]["X"]}
         g["b"], g["turn"] = [" "] * 9, "X"
-        await q.answer()
+        await safe_answer(q)
         return await q.edit_message_text(
             header(g) + f"Turn: ❌ {mention(g['p']['X'])}", parse_mode=ParseMode.HTML, reply_markup=board_kb(g))
     cur = g["p"][g["turn"]]
     if q.from_user.id != cur.id:
-        return await q.answer("Not your turn!", show_alert=True)
+        return await safe_answer(q, "Not your turn!", show_alert=True)
     i = int(arg)
     if g["b"][i] != " ":
-        return await q.answer("Cell taken.", show_alert=True)
+        return await safe_answer(q, "Cell taken.", show_alert=True)
     g["b"][i] = g["turn"]
     w, line = winner(g["b"])
     if w:
@@ -86,7 +87,7 @@ async def on_move(update, ctx):
                                          reply_markup=board_kb(g, (), True))
     g["turn"] = "O" if g["turn"] == "X" else "X"
     nxt = g["p"][g["turn"]]
-    await q.answer()
+    await safe_answer(q)
     await q.edit_message_text(header(g) + f"Turn: {'❌' if g['turn']=='X' else '⭕'} {mention(nxt)}",
                               parse_mode=ParseMode.HTML, reply_markup=board_kb(g))
 

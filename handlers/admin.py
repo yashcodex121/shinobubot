@@ -8,6 +8,7 @@ from telegram import Update
 from database import mongo
 from keyboards.ui import BLUE, GREEN, RED, btn, kb
 from utils.permissions import is_admin
+from utils.helpers import safe_answer
 
 HTML = ParseMode.HTML
 
@@ -60,13 +61,13 @@ async def stats(update, ctx):
 async def on_admin(update, ctx):
     q = update.callback_query
     if not await is_admin(q.from_user.id):
-        return await q.answer("Admins only.", show_alert=True)
+        return await safe_answer(q, "Admins only.", show_alert=True)
     if q.data == "adm:stats":
-        await q.answer()
+        await safe_answer(q)
         return await q.edit_message_text(await _stats_text(), parse_mode=HTML, reply_markup=await _dash_kb())
     on = ((await mongo.db.settings.find_one({"_id": "maintenance"})) or {}).get("on")
     await mongo.db.settings.update_one({"_id": "maintenance"}, {"$set": {"on": not on}}, upsert=True)
-    await q.answer("Toggled")
+    await safe_answer(q, "Toggled")
     await q.edit_message_reply_markup(await _dash_kb())
 
 

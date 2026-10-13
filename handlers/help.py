@@ -4,6 +4,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 from keyboards.games_menu import GAME_MAP, game_page_menu, games_menu
 from keyboards.help_menu import back_to_help, help_menu
 from keyboards.main_menu import start_menu
+from utils.helpers import safe_answer
 
 MAIN = "💞 <b>Help & Commands</b>\n\nChoose a category below to explore Nova's features and commands."
 
@@ -79,30 +80,22 @@ CHAT_TEXT = (
 
 async def on_chat(update, ctx):
     q = update.callback_query
-    await q.answer()
+    await safe_answer(q)
     from keyboards.ui import RED, btn, kb
     back_kb = kb([[btn("◀️ Back", "help:start", RED)]])
-    await q.edit_message_text(
-        CHAT_TEXT,
-        parse_mode=ParseMode.HTML,
-        reply_markup=back_kb,
-    )
+    await q.edit_message_text(CHAT_TEXT, parse_mode=ParseMode.HTML, reply_markup=back_kb)
 
 
 async def on_help(update, ctx):
     q = update.callback_query
-    await q.answer()
+    await safe_answer(q)
     page = q.data.split(":", 1)[1]
     if page == "main":
         await q.edit_message_text(MAIN, parse_mode=ParseMode.HTML, reply_markup=help_menu())
     elif page == "start":
         import html as _html
         name = _html.escape(q.from_user.first_name)
-        await q.edit_message_text(
-            _start_text(name),
-            parse_mode=ParseMode.HTML,
-            reply_markup=start_menu(ctx.bot.username),
-        )
+        await q.edit_message_text(_start_text(name), parse_mode=ParseMode.HTML, reply_markup=start_menu(ctx.bot.username))
     elif page == "games":
         await q.edit_message_text(
             "🎮 <b>Game commands</b> 🎮\n\nChoose a game below to see how to play and its commands! 👇",
@@ -113,7 +106,7 @@ async def on_help(update, ctx):
 
 async def on_game_page(update, ctx):
     q = update.callback_query
-    await q.answer()
+    await safe_answer(q)
     key, label, desc, cmd, ready = GAME_MAP[q.data.split(":", 1)[1]]
     status = "✅ Available" if ready else "🚧 Coming soon"
     await q.edit_message_text(

@@ -6,6 +6,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from database import users
 from keyboards.ui import GREEN, RED, btn, kb
+from utils.helpers import safe_answer
 from utils.validators import parse_amount
 
 SESSIONS = {}  # (chat, msg) -> state. Mines are placed server-side; clients only send tile ids.
@@ -59,32 +60,32 @@ async def on_tile(update, ctx):
     key = (q.message.chat_id, q.message.message_id)
     g = SESSIONS.get(key)
     if not g:
-        return await q.answer("Game expired.", show_alert=True)
+        return await safe_answer(q, "Game expired.", show_alert=True)
     if q.from_user.id != g["uid"]:
-        return await q.answer("This isn't your game!", show_alert=True)
+        return await safe_answer(q, "This isn't your game!", show_alert=True)
     arg = q.data.split(":")[1]
     if arg == "x":
-        return await q.answer()
+        return await safe_answer(q)
     if arg == "cash":
         if not g["open"]:
-            return await q.answer("Reveal a tile first.", show_alert=True)
+            return await safe_answer(q, "Reveal a tile first.", show_alert=True)
         SESSIONS.pop(key)
         win = int(g["bet"] * multiplier(len(g["open"])))
         await users.add_balance(g["uid"], win, "mines_win")
         await users.add_xp(g["uid"], 10)
-        await q.answer()
+        await safe_answer(q)
         return await q.edit_message_text(f"💰 Cashed out <b>${win:,}</b> ({multiplier(len(g['open']))}x)!",
                                          parse_mode=ParseMode.HTML, reply_markup=build(g, True))
     i = int(arg)
     if i in g["open"]:
-        return await q.answer()
+        return await safe_answer(q)
     if i in g["mines"]:
         SESSIONS.pop(key)
-        await q.answer()
+        await safe_answer(q)
         return await q.edit_message_text(f"💥 BOOM! You lost <b>${g['bet']:,}</b>.",
                                          parse_mode=ParseMode.HTML, reply_markup=build(g, True))
     g["open"].add(i)
-    await q.answer()
+    await safe_answer(q)
     if len(g["open"]) == N - config.MINES_COUNT:
         SESSIONS.pop(key)
         win = int(g["bet"] * multiplier(len(g["open"])))
