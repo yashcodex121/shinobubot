@@ -33,7 +33,7 @@ def winner(b, n):
     return None, ()
 
 
-def board_kb(g, win_line=(), over=False):
+def board_kb(g, win_line=(), over=False, bot_username=""):
     n = g["n"]
     rows = []
     for r in range(n):
@@ -42,14 +42,16 @@ def board_kb(g, win_line=(), over=False):
             i = r * n + c
             v = g["b"][i]
             if v == "X":
-                row.append(btn("❌", "xo:x", GREEN if i in win_line else RED))
+                row.append(btn("  ❌  ", "xo:x", GREEN if i in win_line else RED))
             elif v == "O":
-                row.append(btn("⭕", "xo:x", GREEN if i in win_line else BLUE))
+                row.append(btn("  ⭕  ", "xo:x", GREEN if i in win_line else BLUE))
             else:
-                row.append(btn("▫️", f"xo:{i}"))
+                row.append(btn("  ▫️  ", f"xo:{i}"))
         rows.append(row)
     if over:
         rows.append([btn("🔁 Rematch", "xo:re", GREEN)])
+    if bot_username:
+        rows.append([btn("➕ Add me to your group", url=f"https://t.me/{bot_username}?startgroup=true")])
     return kb(rows)
 
 
@@ -79,7 +81,8 @@ async def xoxo(update, ctx):
 
     g = {"b": [" "] * (n * n), "turn": "X", "p": {"X": me, "O": tgt}, "n": n}
     m = await update.effective_message.reply_text(
-        header(g) + f"Turn: ❌ {mention(me)}", parse_mode=ParseMode.HTML, reply_markup=board_kb(g))
+        header(g) + f"Turn: ❌ {mention(me)}", parse_mode=ParseMode.HTML,
+        reply_markup=board_kb(g, bot_username=ctx.bot.username))
     GAMES[(m.chat_id, m.message_id)] = g
 
 
@@ -102,7 +105,8 @@ async def on_move(update, ctx):
         g["turn"] = "X"
         await safe_answer(q)
         return await q.edit_message_text(
-            header(g) + f"Turn: ❌ {mention(g['p']['X'])}", parse_mode=ParseMode.HTML, reply_markup=board_kb(g))
+            header(g) + f"Turn: ❌ {mention(g['p']['X'])}", parse_mode=ParseMode.HTML,
+            reply_markup=board_kb(g, bot_username=q.bot.username))
 
     cur = g["p"][g["turn"]]
     if q.from_user.id != cur.id:
@@ -124,19 +128,22 @@ async def on_move(update, ctx):
             {"_id": f"xoxo:{cur.id}"}, {"$inc": {"wins": 1}}, upsert=True)
         return await q.edit_message_text(
             header(g) + f"🏆 {mention(cur)} wins! +$100",
-            parse_mode=ParseMode.HTML, reply_markup=board_kb(g, line, True))
+            parse_mode=ParseMode.HTML,
+            reply_markup=board_kb(g, line, over=True, bot_username=q.bot.username))
 
     if " " not in g["b"]:
         return await q.edit_message_text(
             header(g) + "🤝 It's a draw!",
-            parse_mode=ParseMode.HTML, reply_markup=board_kb(g, (), True))
+            parse_mode=ParseMode.HTML,
+            reply_markup=board_kb(g, (), over=True, bot_username=q.bot.username))
 
     g["turn"] = "O" if g["turn"] == "X" else "X"
     nxt = g["p"][g["turn"]]
     await safe_answer(q)
     await q.edit_message_text(
         header(g) + f"Turn: {'❌' if g['turn'] == 'X' else '⭕'} {mention(nxt)}",
-        parse_mode=ParseMode.HTML, reply_markup=board_kb(g))
+        parse_mode=ParseMode.HTML,
+        reply_markup=board_kb(g, bot_username=q.bot.username))
 
 
 def register(app):
