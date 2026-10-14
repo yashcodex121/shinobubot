@@ -38,12 +38,12 @@ PAGES = {
 
 
 async def _safe_edit(q, text, parse_mode=ParseMode.HTML, reply_markup=None):
-    """Edit message text. If message has media (no text), send new message instead."""
+    """Edit message text. If message has media (no text), delete and send fresh."""
     try:
         await q.edit_message_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
     except BadRequest as e:
-        if "no text" in str(e).lower() or "message is not modified" in str(e).lower():
-            # Media message — delete and send fresh
+        err = str(e).lower()
+        if "no text" in err or "message is not modified" in err:
             try:
                 await q.message.delete()
             except Exception:
@@ -51,6 +51,9 @@ async def _safe_edit(q, text, parse_mode=ParseMode.HTML, reply_markup=None):
             await q.message.chat.send_message(text, parse_mode=parse_mode, reply_markup=reply_markup)
         else:
             raise
+
+
+async def help_cmd(update, ctx):
     await update.effective_message.reply_text(MAIN, parse_mode=ParseMode.HTML, reply_markup=help_menu())
 
 
