@@ -81,8 +81,13 @@ def _resolve(update, want):
     return None
 
 
+def _support_btn():
+    """Blue Support button -> the support group (same as admin.py)."""
+    return btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)
+
+
 def _support_kb():
-    return kb([[btn("🔹 Inline Support", switch="")]])
+    return kb([[_support_btn()]])
 
 
 async def _reply_id(update, title, file_id, markup=None):
@@ -131,7 +136,7 @@ async def sid(update, ctx):
             "Send me a sticker first (or reply to one) — then /sid.\n"
             "Premium stickers work too.")
     _, fid_, set_name, premium = got
-    rows = [[btn("🔹 Inline Support", switch="")]]
+    rows = [[_support_btn()]]
     if premium and set_name:  # premium pack — dump every id in the pack
         _seq[0] += 1
         PACKS[str(_seq[0])] = set_name
