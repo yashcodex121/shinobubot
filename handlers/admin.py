@@ -184,7 +184,7 @@ def register(app):
     # File ID extractor — any media in private chat (admin only)
     app.add_handler(MessageHandler(
         filters.ChatType.PRIVATE & (
-            filters.ANIMATION | filters.STICKER | filters.VIDEO |
+            filters.ANIMATION | filters.Sticker.ALL | filters.VIDEO |
             filters.PHOTO | filters.AUDIO | filters.VOICE |
             filters.VIDEO_NOTE | filters.Document.ALL
         ),
