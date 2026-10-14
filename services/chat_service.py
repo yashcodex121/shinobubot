@@ -174,7 +174,7 @@ async def _groq_chat(messages: list, retries: int = None) -> str:
                 client.chat.completions.create,
                 model=GROQ_MODEL,
                 messages=messages,
-                max_tokens=300,
+                max_tokens=80,
                 temperature=1.1,
                 top_p=0.95,
             )
@@ -217,8 +217,11 @@ async def chat(user_id: int, user_name: str, message: str) -> str:
             "content": entry["text"],
         })
 
-    # Add current user message
-    messages.append({"role": "user", "content": message})
+    # Add current user message with strict length instruction
+    messages.append({
+        "role": "user",
+        "content": f"{message}\n\n[STRICT: Reply in max 1-2 lines only, casual Hinglish, no explanation]"
+    })
 
     try:
         reply = await _groq_chat(messages)
