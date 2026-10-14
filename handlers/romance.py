@@ -45,6 +45,13 @@ async def propose(update, ctx):
     )
 
 
+async def _edit_proposal_msg(q, text):
+    """The proposal message is an animation + caption — edit its caption
+    (edit_message_text fails on media messages: 'no text in the message to edit').
+    The empty keyboard removes Accept/Decline once the proposal is decided."""
+    await q.edit_message_caption(caption=text, parse_mode=HTML, reply_markup=kb([]))
+
+
 async def on_proposal(update, ctx):
     q = update.callback_query
     _, ans, pid = q.data.split(":")
@@ -55,15 +62,15 @@ async def on_proposal(update, ctx):
         return await q.answer("This proposal isn't for you 😉", show_alert=True)
     if time.time() > p["expires"]:
         await mongo.db.marriages.update_one({"_id": p["_id"]}, {"$set": {"status": "expired"}})
-        return await q.edit_message_text("⌛ Proposal expired.")
+        return await _edit_proposal_msg(q, "⌛ Proposal expired.")
     if ans == "n":
         await mongo.db.marriages.update_one({"_id": p["_id"]}, {"$set": {"status": "declined"}})
-        return await q.edit_message_text("💔 Proposal declined.")
+        return await _edit_proposal_msg(q, "💔 Proposal declined.")
     if await active_marriage(p["a"]) or await active_marriage(p["b"]):
         await mongo.db.marriages.update_one({"_id": p["_id"]}, {"$set": {"status": "cancelled"}})
-        return await q.edit_message_text("❌ One of you is already married.")
+        return await _edit_proposal_msg(q, "❌ One of you is already married.")
     await mongo.db.marriages.update_one({"_id": p["_id"]}, {"$set": {"status": "active", "since": time.time()}})
-    await q.edit_message_text("💞 <b>Congratulations!</b> You are now married! 🎉", parse_mode=HTML)
+    await _edit_proposal_msg(q, "💞 <b>Congratulations!</b> You are now married! 🎉")
 
 
 async def divorce(update, ctx):
