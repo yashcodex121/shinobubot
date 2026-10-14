@@ -1,6 +1,6 @@
 """UNO — lobby + full rules, played through inline mode like @unobot.
 
-Flow: /new -> /join -> /start (>=2 players) -> everyone plays by typing
+Flow: /new -> /join -> /launch (>=2 players) -> everyone plays by typing
 @botusername <space> inline (playable cards, draw, ? state, colour picker
 after a wild). 90s per turn (auto-skip + /skip). Creator: /close /open
 /kick /exit /enable_translations /disable_translations. Multiple groups
@@ -128,7 +128,7 @@ def _lobby(g):
     return (f"🃏 <b>UNO lobby</b> — {g['title']}\n"
             f"Players: {names} ({len(g['players'])})\n"
             f"Lobby: {lock}  |  Creator: {_m(g, g['creator'])}\n\n"
-            f"/join to join · creator: /start · /close /open /kick /exit")
+            f"/join to join · creator: /launch · /close /open /kick /exit")
 
 
 # ── commands ─────────────────────────────────────────────────────────────────
@@ -150,7 +150,7 @@ async def new_game(update, ctx):
          "color_wait": None, "trans": False, "title": title, "bot": ctx.bot.username,
          "job": None}
     GAMES[chat.id] = g
-    await _send(ctx, chat.id, _lobby(g) + "\n\nAnyone: /join — then creator: /start")
+    await _send(ctx, chat.id, _lobby(g) + "\n\nAnyone: /join — then creator: /launch")
     # notify_me subscribers
     for uid in list(NOTIFY):
         try:
@@ -183,7 +183,7 @@ async def start_game(update, ctx):
     if not g or g["started"]:
         return
     if u.id != g["creator"]:
-        return await update.effective_message.reply_text("Only the game creator can /start.")
+        return await update.effective_message.reply_text("Only the game creator can /launch.")
     if len(g["players"]) < 2:
         return await update.effective_message.reply_text("Need at least 2 players — /join first.")
     # deal 7 each
@@ -561,7 +561,7 @@ async def on_chosen(update, ctx):
 def register(app):
     app.add_handler(CommandHandler("new", new_game, block=False))
     app.add_handler(CommandHandler("join", join_game, block=False))
-    app.add_handler(CommandHandler("start", start_game, block=False))
+    app.add_handler(CommandHandler("launch", start_game, block=False))
     app.add_handler(CommandHandler("leave", leave_game, block=False))
     app.add_handler(CommandHandler("notify_me", notify_me, block=False))
     app.add_handler(CommandHandler("settings", settings, block=False))
