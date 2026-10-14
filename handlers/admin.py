@@ -197,10 +197,22 @@ SUDO_BANNER = "CgACAgQAAxkBAAPUas814aNjcToWI4d4tf-vL4abTEsAAuQCAAIfAAEUU_o6VElEQ
 
 
 async def sudolist(update, ctx):
-    """Public: banner GIF + every sudo (owner/config admins + db sudos) + Support/Add-me buttons."""
-    ids = set(config.ADMIN_IDS) | {d["_id"] for d in await mongo.db.admins.find({}).to_list(1000)}
-    lines = [f"{i}➤ <code>{uid}</code>" for i, uid in enumerate(sorted(ids), 1)] or ["No sudos yet."]
-    text = "ꜱᴜᴅᴏ ᴜꜱᴇʀꜱ :\n" + "\n".join(lines)
+    """Public: banner GIF + every sudo (fancy name + id) + Support/Add-me buttons."""
+    ids = sorted(set(config.ADMIN_IDS) | {d["_id"] for d in await mongo.db.admins.find({}).to_list(1000)})
+    # names from the users collection (one batch query); get_chat only for leftovers
+    docs = await mongo.db.users.find({"_id": {"$in": ids}}).to_list(1000) if ids else []
+    names = {d["_id"]: d.get("name") for d in docs if d.get("name")}
+    lines = []
+    for i, uid in enumerate(ids, 1):
+        name = names.get(uid)
+        if not name:
+            try:
+                name = (await ctx.bot.get_chat(uid)).full_name
+            except Exception:
+                name = None
+        who = html.escape(_fancy(name)) if name else None
+        lines.append(f"{i}➤ " + " ".join(x for x in (who, f"<code>{uid}</code>") if x))
+    text = "ꜱᴜᴅᴏ ᴜꜱᴇʀꜱ :\n" + "\n".join(lines or ["No sudos yet."])
     markup = kb([[btn("Support", url="https://t.me/NovaSupport", style=RED),
                   btn("Add me", url=f"https://t.me/{ctx.bot.username}?startgroup=true", style=BLUE)]])
     try:
