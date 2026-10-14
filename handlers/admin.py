@@ -1,4 +1,5 @@
 import asyncio
+import html
 import time
 
 from telegram.constants import ParseMode
@@ -146,19 +147,45 @@ def _target_id(update, ctx):
     return int(ctx.args[0]) if ctx.args and ctx.args[0].lstrip("-").isdigit() else None
 
 
+def _fancy(text):
+    """Stylish font: transliterate ASCII letters/digits to Unicode
+    mathematical bold-italic (emojis & everything else pass through)."""
+    out = []
+    for ch in text:
+        o = ord(ch)
+        if "A" <= ch <= "Z":
+            out.append(chr(0x1D468 + o - ord("A")))        # 𝐀–𝐙
+        elif "a" <= ch <= "z":
+            out.append(chr(0x1D482 + o - ord("a")))        # 𝐚–𝐳
+        elif ch.isdigit():
+            out.append(chr(0x1D7CE + int(ch)))              # 𝟎–𝟗
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 async def addsudo(update, ctx):
-    """Owner only: reply to a user (or pass an id) to make them a sudo admin."""
+    """Owner only: reply to a user (or pass an id) to add them to the sudo list."""
     msg = update.effective_message
     if not is_owner(update.effective_user.id):
         return await msg.reply_text("🚫 Sirf bot owner ye command chala sakta hai.")
-    uid = _target_id(update, ctx)
+    r = msg.reply_to_message
+    uid = r.from_user.id if (r and r.from_user) else (int(ctx.args[0]) if ctx.args and ctx.args[0].lstrip("-").isdigit() else None)
     if not uid:
         return await msg.reply_text("Reply to a user with /addsudo (or /addsudo <user_id>).")
+    # Display: replied user's name > API lookup by id > raw id fallback
+    name = r.from_user.full_name if (r and r.from_user) else None
+    if not name:
+        try:
+            name = (await ctx.bot.get_chat(uid)).full_name
+        except Exception:
+            name = None
+    label = html.escape(_fancy(name)) if name else f"<code>{uid}</code>"
     if await mongo.db.admins.find_one({"_id": uid}):
-        text = f"ℹ️ <code>{uid}</code> is already a sudo admin."
+        text = f"ℹ️ {label} already in sudolist"
     else:
         await mongo.db.admins.insert_one({"_id": uid, "ts": time.time(), "by": update.effective_user.id})
-        text = f"✅ <code>{uid}</code> is now a sudo admin."
+        text = f"✅ {label} added to sudolist"
     await msg.reply_text(
         text, parse_mode=HTML,
         reply_markup=kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=GREEN)]]))
