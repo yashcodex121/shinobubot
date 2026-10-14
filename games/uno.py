@@ -10,7 +10,7 @@ import html
 import random
 import time
 
-from telegram import InlineQueryResultArticle, InputTextMessageContent
+from telegram import InlineQueryResultArticle, InlineQueryResultPhoto, InputTextMessageContent
 from telegram.ext import ChosenInlineResultHandler, CommandHandler, InlineQueryHandler
 
 import config
@@ -23,6 +23,12 @@ CNAME = {"r": "Red", "g": "Green", "b": "Blue", "y": "Yellow"}
 VALNAME = {"S": "Skip", "R": "Reverse", "D2": "+2", "W": "Wild", "W4": "+4"}
 TURN_SECONDS = 90
 
+# Inline cards are sent as real card images (like @unobot). Telegram inline
+# results need a public URL, so the PNGs live in the repo and are served
+# via raw.githubusercontent.com (games/uno_cards.py regenerates them).
+CARD_BASE = "https://raw.githubusercontent.com/yashcodex121/shinobubot/main/static/uno"
+CARD_W, CARD_H = 320, 480
+
 GAMES = {}    # chat_id -> game dict (in-memory; restart clears running games)
 NOTIFY = set()  # users who want a PM on /new
 
@@ -34,7 +40,7 @@ def card(c, v):
 
 
 def label(c, v):
-    return f"{COLORS.get(c, '🌈')} {v if v in VALNAME else v}"
+    return f"{COLORS.get(c, '🌈')} {CNAME.get(c, 'Wild')} {VALNAME.get(v, v)}"
 
 
 def _deck():
@@ -105,7 +111,7 @@ def state_text(g):
     arrow = "↻" if g["dir"] == 1 else "↺"
     lines = [f"🃏 <b>UNO</b> — {g['title']}",
              f"Top: <b>{top}</b>  |  Direction: {arrow}",
-             f"Turn: {_m(g, cur)}  ⏱{TURN_SECONDS}s" if cur else "Turn: —",
+             (f"Turn: {_m(g, cur)} — <b>make your choice!</b>  ⏱{TURN_SECONDS}s" if cur else "Turn: —"),
              f"Hands: {hands}",
              f"<i>Type @{g['bot']} <code> </code> to play your cards inline.</i>"]
     return "\n".join(lines)
@@ -395,11 +401,7 @@ async def _do_play(ctx, chat_id, uid, c, v, inline_message_id=None):
         note = "That card can't be played on this top card."
     if note:
         if inline_message_id:
-            try:
-                await ctx.bot.edit_message_text(inline_message_id=inline_message_id,
-                                                text=f"🎴 {label(c, v)} — ✗ {note}")
-            except Exception:
-                pass
+            await _edit_inline(ctx, inline_message_id, f"🎴 {label(c, v)} — ✗ {note}", photo=True)
         else:
             await _send(ctx, chat_id, f"✗ {note}")
         return
@@ -408,6 +410,7 @@ async def _do_play(ctx, chat_id, uid, c, v, inline_message_id=None):
     g["discard"].append((c, v))
     if c == "w":
         g["color_wait"] = uid  # colour stays until the player picks inline
+        g["last_wild"] = (c, v, inline_message_id)
     else:
         g["color"] = c
     await _after_play(ctx, chat_id, g, uid, c, v, inline_message_id)
@@ -415,11 +418,7 @@ async def _do_play(ctx, chat_id, uid, c, v, inline_message_id=None):
 
 async def _after_play(ctx, chat_id, g, uid, c, v, inline_message_id=None):
     if inline_message_id:
-        try:
-            await ctx.bot.edit_message_text(inline_message_id=inline_message_id,
-                                            text=f"🎴 {label(c, v)} ✓")
-        except Exception:
-            pass
+        await _edit_inline(ctx, inline_message_id, f"🎴 {label(c, v)} ✓", photo=True)
     if not g["hands"][uid]:
         GAMES.pop(chat_id, None)
         prize = random.randint(config.GAME_REWARD_MIN, config.GAME_REWARD_MAX)
@@ -461,12 +460,15 @@ async def _after_play(ctx, chat_id, g, uid, c, v, inline_message_id=None):
     await _arm_timer(ctx, chat_id, g)
 
 
-async def _do_color(ctx, chat_id, uid, color):
+async def _do_color(ctx, chat_id, uid, color, card_imid=None):
     g = GAMES.get(chat_id)
     if not g or g.get("color_wait") != uid or color not in "rgby":
         return
     g["color"] = color
     g["color_wait"] = None
+    wild = g.pop("last_wild", None)
+    if wild and wild[2]:  # update the wild card message with the chosen colour
+        await _edit_inline(ctx, wild[2], f"🎴 {label(wild[0], wild[1])} ✓ · {COLORS[color]} {CNAME[color]}", photo=True)
     await _send(ctx, chat_id, f"🎨 Colour set to {COLORS[color]} <b>{CNAME[color]}</b> by {_m(g, uid)}.")
     _advance(g)
     await _send(ctx, chat_id, state_text(g))
@@ -504,6 +506,27 @@ def _art(rid, title, desc, text):
         input_message_content=InputTextMessageContent(text, parse_mode="HTML"))
 
 
+def _card_art(rid, tag, c, v, desc):
+    """Card as a real image (photo result) — the group message shows the card."""
+    url = f"{CARD_BASE}/{c}{v}.png"
+    return InlineQueryResultPhoto(
+        id=rid, photo_url=url, thumbnail_url=url,
+        photo_width=CARD_W, photo_height=CARD_H,
+        title=f"{tag} {label(c, v)}", description=desc,
+        caption=f"🎴 {label(c, v)}", parse_mode="HTML")
+
+
+async def _edit_inline(ctx, imid, text, photo=False):
+    """Photo results create media messages (caption edits); articles create text."""
+    try:
+        if photo:
+            await ctx.bot.edit_message_caption(inline_message_id=imid, caption=text, parse_mode="HTML")
+        else:
+            await ctx.bot.edit_message_text(inline_message_id=imid, text=text, parse_mode="HTML")
+    except Exception:
+        pass
+
+
 async def on_inline(update, ctx):
     q = update.inline_query
     u = q.from_user
@@ -519,10 +542,9 @@ async def on_inline(update, ctx):
             your_turn = g["players"][g["turn"]] == u.id
             for c, v in g["hands"][u.id]:
                 ok = your_turn and _playable(g, c, v)
-                results.append(_art(
-                    f"p:{chat_id}:{c}{v}", f"{tag} {label(c, v)}",
-                    "✅ Play this card" if ok else ("⌛ Not your turn" if not your_turn else "❌ Can't play now"),
-                    f"🎴 {label(c, v)}"))
+                results.append(_card_art(
+                    f"p:{chat_id}:{c}{v}", tag, c, v,
+                    "✅ Play this card" if ok else ("⌛ Not your turn" if not your_turn else "❌ Can't play now")))
             if your_turn:
                 results.append(_art(f"d:{chat_id}", f"{tag} ➕ Draw a card",
                                     "Draw 1 from the deck", "➕ Drawing…"))
@@ -552,7 +574,7 @@ async def on_chosen(update, ctx):
         c, v = enc[0], enc[1:]
         await _do_play(ctx, chat_id, uid, c, v, r.inline_message_id)
     elif kind == "c" and len(parts) == 3:
-        await _do_color(ctx, chat_id, uid, parts[2])
+        await _do_color(ctx, chat_id, uid, parts[2], r.inline_message_id)
     elif kind == "d":
         await _do_draw(ctx, chat_id, uid, r.inline_message_id)
     # "s" (state) and "x" need no action — the inline message already shows it
