@@ -151,7 +151,7 @@ async def set_group_setting(chat_id: int, key: str, value):
 #  Groq API call with key rotation
 # ─────────────────────────────────────────────
 
-GROQ_MODEL = "openai/gpt-oss-120b"
+GROQ_MODEL = "qwen/qwen3.8-27b"
 
 async def _groq_chat(messages: list, retries: int = None) -> str:
     """Try all available Groq keys before giving up."""
