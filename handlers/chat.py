@@ -14,6 +14,7 @@ Commands:
 import asyncio
 import html
 import random
+import time
 
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
@@ -26,6 +27,8 @@ from telegram.ext import (
 )
 
 import config
+from games._wordround import ROUNDS as ACTIVE_WORD_ROUNDS
+from games.word_seek import GAMES as ACTIVE_WORDSEEK_GAMES
 from services.chat_service import (
     chat,
     clear_memory,
@@ -71,6 +74,22 @@ def _bot_mentioned(update: Update, bot_username: str) -> bool:
     return False
 
 
+# While a word-game round is live (Jumble/Wordscramble/WordSeek), Nova stays
+# out of the way: guesses are judged by the game modules, so her random AI
+# replies would only spam over the game. Word rounds expire on their own
+# timer; a forgotten WordSeek round (no timer, ended by a correct guess or
+# /end) stops counting as live after this long.
+GAME_AI_MUTE_SECS = 15 * 60
+
+
+def _game_ai_muted(chat_id: int) -> bool:
+    """True when a word-game round is active in this chat."""
+    if chat_id in ACTIVE_WORD_ROUNDS:  # Jumble / Wordscramble
+        return True
+    g = ACTIVE_WORDSEEK_GAMES.get(chat_id)  # WordSeek
+    return bool(g and time.time() - g.get("start", 0) < GAME_AI_MUTE_SECS)
+
+
 async def _should_respond_group(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> bool:
     """Decide whether Nova should respond in a group message."""
     chat_id = update.effective_chat.id
@@ -80,6 +99,11 @@ async def _should_respond_group(update: Update, ctx: ContextTypes.DEFAULT_TYPE) 
     group_settings = await get_group_settings(chat_id)
     if not group_settings.get("enabled", True):
         return False
+
+    # Game in progress: only speak when directly mentioned/replied to — no
+    # random chime-ins that would talk over the game.
+    if _game_ai_muted(chat_id):
+        return _bot_mentioned(update, bot_username)
 
     group_mode = group_settings.get("mode", "normal")
     user_prefs = await get_prefs(user_id)
