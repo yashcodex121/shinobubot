@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from telegram.constants import ParseMode
-from telegram.ext import (ApplicationHandlerStop, CallbackQueryHandler, CommandHandler, TypeHandler)
+from telegram.ext import (ApplicationHandlerStop, CallbackQueryHandler, CommandHandler, MessageHandler, TypeHandler, filters)
 from telegram import Update
 
 from database import mongo
@@ -71,7 +71,45 @@ async def on_admin(update, ctx):
     await q.edit_message_reply_markup(await _dash_kb())
 
 
-def _target_id(update, ctx):
+@admin_only
+async def get_file_id(update, ctx):
+    """Reply with file_id of any media/sticker/GIF sent or forwarded."""
+    msg = update.effective_message
+    file_id = file_type = None
+
+    if msg.sticker:
+        file_id = msg.sticker.file_id
+        file_type = "🎭 Sticker"
+    elif msg.animation:
+        file_id = msg.animation.file_id
+        file_type = "🎞 GIF / Animation"
+    elif msg.video:
+        file_id = msg.video.file_id
+        file_type = "🎬 Video"
+    elif msg.photo:
+        file_id = msg.photo[-1].file_id
+        file_type = "🖼 Photo"
+    elif msg.audio:
+        file_id = msg.audio.file_id
+        file_type = "🎵 Audio"
+    elif msg.voice:
+        file_id = msg.voice.file_id
+        file_type = "🎤 Voice"
+    elif msg.video_note:
+        file_id = msg.video_note.file_id
+        file_type = "📹 Video Note"
+    elif msg.document:
+        file_id = msg.document.file_id
+        file_type = "📄 Document"
+    else:
+        return
+
+    support_kb = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+    await msg.reply_text(
+        f"{file_type}\n<code>{file_id}</code>",
+        parse_mode=HTML,
+        reply_markup=support_kb,
+    )
     r = update.effective_message.reply_to_message
     if r and r.from_user:
         return r.from_user.id
@@ -143,3 +181,12 @@ def register(app):
     app.add_handler(CommandHandler("setwelcome", setwelcome))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(on_admin, pattern=r"^adm:"))
+    # File ID extractor — any media in private chat (admin only)
+    app.add_handler(MessageHandler(
+        filters.ChatType.PRIVATE & (
+            filters.ANIMATION | filters.STICKER | filters.VIDEO |
+            filters.PHOTO | filters.AUDIO | filters.VOICE |
+            filters.VIDEO_NOTE | filters.Document.ALL
+        ),
+        get_file_id,
+    ), group=2)
