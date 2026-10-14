@@ -1,4 +1,5 @@
 from telegram.constants import ParseMode
+from telegram.error import BadRequest
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from keyboards.games_menu import GAME_MAP, game_page_menu, games_menu
@@ -36,7 +37,20 @@ PAGES = {
 }
 
 
-async def help_cmd(update, ctx):
+async def _safe_edit(q, text, parse_mode=ParseMode.HTML, reply_markup=None):
+    """Edit message text. If message has media (no text), send new message instead."""
+    try:
+        await q.edit_message_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+    except BadRequest as e:
+        if "no text" in str(e).lower() or "message is not modified" in str(e).lower():
+            # Media message — delete and send fresh
+            try:
+                await q.message.delete()
+            except Exception:
+                pass
+            await q.message.chat.send_message(text, parse_mode=parse_mode, reply_markup=reply_markup)
+        else:
+            raise
     await update.effective_message.reply_text(MAIN, parse_mode=ParseMode.HTML, reply_markup=help_menu())
 
 
@@ -83,7 +97,7 @@ async def on_chat(update, ctx):
     await safe_answer(q)
     from keyboards.ui import RED, btn, kb
     back_kb = kb([[btn("◀️ Back", "help:start", RED)]])
-    await q.edit_message_text(CHAT_TEXT, parse_mode=ParseMode.HTML, reply_markup=back_kb)
+    await _safe_edit(q, CHAT_TEXT, reply_markup=back_kb)
 
 
 async def on_help(update, ctx):
@@ -91,17 +105,17 @@ async def on_help(update, ctx):
     await safe_answer(q)
     page = q.data.split(":", 1)[1]
     if page == "main":
-        await q.edit_message_text(MAIN, parse_mode=ParseMode.HTML, reply_markup=help_menu())
+        await _safe_edit(q, MAIN, reply_markup=help_menu())
     elif page == "start":
         import html as _html
         name = _html.escape(q.from_user.first_name)
-        await q.edit_message_text(_start_text(name), parse_mode=ParseMode.HTML, reply_markup=start_menu(ctx.bot.username))
+        await _safe_edit(q, _start_text(name), reply_markup=start_menu(ctx.bot.username))
     elif page == "games":
-        await q.edit_message_text(
+        await _safe_edit(q,
             "🎮 <b>Game commands</b> 🎮\n\nChoose a game below to see how to play and its commands! 👇",
-            parse_mode=ParseMode.HTML, reply_markup=games_menu())
+            reply_markup=games_menu())
     elif page in PAGES:
-        await q.edit_message_text(PAGES[page], parse_mode=ParseMode.HTML, reply_markup=back_to_help())
+        await _safe_edit(q, PAGES[page], reply_markup=back_to_help())
 
 
 async def on_game_page(update, ctx):
@@ -109,9 +123,9 @@ async def on_game_page(update, ctx):
     await safe_answer(q)
     key, label, desc, cmd, ready = GAME_MAP[q.data.split(":", 1)[1]]
     status = "✅ Available" if ready else "🚧 Coming soon"
-    await q.edit_message_text(
+    await _safe_edit(q,
         f"<b>{label}</b>\n\n{desc}\n\n<b>Command:</b> <code>{cmd}</code>\n<b>Status:</b> {status}",
-        parse_mode=ParseMode.HTML, reply_markup=game_page_menu())
+        reply_markup=game_page_menu())
 
 
 def register(app):
