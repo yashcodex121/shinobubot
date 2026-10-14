@@ -71,7 +71,6 @@ async def on_admin(update, ctx):
     await q.edit_message_reply_markup(await _dash_kb())
 
 
-@admin_only
 async def get_file_id(update, ctx):
     """Reply with file_id of any media/sticker/GIF sent or forwarded."""
     msg = update.effective_message
@@ -110,6 +109,29 @@ async def get_file_id(update, ctx):
         parse_mode=HTML,
         reply_markup=support_kb,
     )
+
+
+async def get_id(update, ctx):
+    """Send user/chat ID. If reply — show replied user's ID."""
+    msg = update.effective_message
+    support_kb = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+
+    if msg.reply_to_message and msg.reply_to_message.from_user:
+        u = msg.reply_to_message.from_user
+        text = (
+            f"👤 <b>User ID</b>\n"
+            f"Name: {u.full_name}\n"
+            f"ID: <code>{u.id}</code>"
+        )
+    else:
+        u = update.effective_user
+        chat = update.effective_chat
+        text = (
+            f"👤 <b>Your ID:</b> <code>{u.id}</code>\n"
+            f"💬 <b>Chat ID:</b> <code>{chat.id}</code>"
+        )
+
+    await msg.reply_text(text, parse_mode=HTML, reply_markup=support_kb)
     r = update.effective_message.reply_to_message
     if r and r.from_user:
         return r.from_user.id
@@ -180,8 +202,9 @@ def register(app):
     app.add_handler(CommandHandler("maintenance", maintenance))
     app.add_handler(CommandHandler("setwelcome", setwelcome))
     app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CommandHandler("id", get_id))
     app.add_handler(CallbackQueryHandler(on_admin, pattern=r"^adm:"))
-    # File ID extractor — any media in private chat (admin only)
+    # File ID extractor — any media sent/forwarded to bot (anyone can use)
     app.add_handler(MessageHandler(
         filters.ChatType.PRIVATE & (
             filters.ANIMATION | filters.Sticker.ALL | filters.VIDEO |
