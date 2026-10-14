@@ -15,11 +15,11 @@ HTML = ParseMode.HTML
 
 
 PROPOSE_GIFS = [
-    "773292",
-    "773307",
-    "773313",
-    "773320",
-    "773326",
+    "https://media.tenor.com/x8v1oNUOmg4AAAAM/propose-love.gif",
+    "https://media.tenor.com/vGfn1oMYr6EAAAAM/propose-ring.gif",
+    "https://media.tenor.com/Zzx-w97IWkgAAAAM/proposing-will-you-marry-me.gif",
+    "https://media.tenor.com/nHbkJcmPzVQAAAAM/marry-me-proposal.gif",
+    "https://media.tenor.com/7NkFnKGIWlEAAAAM/proposal-ring.gif",
 ]
 
 
