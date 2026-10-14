@@ -5,7 +5,7 @@ GAMES = [
     ("uno", "🃏 UNO", "Multiplayer card game. Match colour/number, use special cards, shout UNO!", "/uno", False),
     ("mines", "💣 Mines", "Reveal safe tiles to grow your multiplier. Hit a mine and you lose the bet. Cash out anytime.", "/mines &lt;bet&gt;", True),
     ("rps", "🪨 RPS", "Rock-Paper-Scissors against the bot.", "/rps", True),
-    ("wordseek", "🔎 Wordseek", "Find hidden words in a letter grid before time runs out. Type any word you spot!", "/wordseek", True),
+    ("wordseek", "🔎 Wordseek", "A word-guessing game (like Wordle). Guess the hidden word by typing it in chat!\n\n/wordseek or /ws — Start a 5-letter game.\n/ws4 or /ws6 — Start a 4-letter or 6-letter game.\n/end — End any active game.", "/wordseek or /ws", True),
     ("wordgrid", "🔢 Wordgrid", "Find as many words as you can in a letter grid before time runs out.", "/wordgrid", False),
     ("tap", "⚡ Tap", "Tap faster than everyone else.", "/tap", False),
     ("crash", "💥 Crash", "Cash out before the multiplier crashes.", "/crash &lt;bet&gt;", False),
