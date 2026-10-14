@@ -3,7 +3,7 @@
 Flow: /new -> /join -> /start (>=2 players) -> everyone plays by typing
 @botusername <space> inline (playable cards, draw, ? state, colour picker
 after a wild). 90s per turn (auto-skip + /skip). Creator: /close /open
-/kick /kill /enable_translations /disable_translations. Multiple groups
+/kick /exit /enable_translations /disable_translations. Multiple groups
 at once — inline results are tagged with the group name.
 """
 import html
@@ -128,7 +128,7 @@ def _lobby(g):
     return (f"🃏 <b>UNO lobby</b> — {g['title']}\n"
             f"Players: {names} ({len(g['players'])})\n"
             f"Lobby: {lock}  |  Creator: {_m(g, g['creator'])}\n\n"
-            f"/join to join · creator: /start · /close /open /kick /kill")
+            f"/join to join · creator: /start · /close /open /kick /exit")
 
 
 # ── commands ─────────────────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ async def new_game(update, ctx):
     if chat.type == "private":
         return await update.effective_message.reply_text("Run /new in a group.")
     if chat.id in GAMES:
-        return await update.effective_message.reply_text("A game already exists here — /join it or creator /kill it.")
+        return await update.effective_message.reply_text("A game already exists here — /join it or creator /exit it.")
     try:
         title = (await ctx.bot.get_chat(chat.id)).title or chat.title or "Group"
     except Exception:
@@ -193,7 +193,7 @@ async def start_game(update, ctx):
     while True:
         c = _draw(g, 1)
         if not c:
-            return await _send(ctx, chat.id, "❌ Deck ran out — /kill and retry.")
+            return await _send(ctx, chat.id, "❌ Deck ran out — /exit and retry.")
         c = c[0]
         if c[1] not in ("W4", "D2"):
             break
@@ -275,7 +275,7 @@ async def open_lobby(update, ctx):
 
 
 async def kill_game(update, ctx):
-    g = await _creator_cmd(update, ctx, "kill")
+    g = await _creator_cmd(update, ctx, "exit")
     if g:
         if g.get("job"):
             try:
@@ -298,7 +298,7 @@ async def kick_player(update, ctx):
         return await update.effective_message.reply_text("Reply to a player's message with /kick.")
     tid = r.from_user.id
     if tid == g["creator"]:
-        return await update.effective_message.reply_text("You can't kick yourself — /kill instead.")
+        return await update.effective_message.reply_text("You can't kick yourself — /exit instead.")
     if tid not in g["players"]:
         return await update.effective_message.reply_text("That user isn't in the game.")
     g["players"].remove(tid)
@@ -565,7 +565,7 @@ def register(app):
     app.add_handler(CommandHandler("settings", settings, block=False))
     app.add_handler(CommandHandler("close", close_lobby, block=False))
     app.add_handler(CommandHandler("open", open_lobby, block=False))
-    app.add_handler(CommandHandler("kill", kill_game, block=False))
+    app.add_handler(CommandHandler("exit", kill_game, block=False))
     app.add_handler(CommandHandler("kick", kick_player, block=False))
     app.add_handler(CommandHandler("enable_translations", enable_trans, block=False))
     app.add_handler(CommandHandler("disable_translations", disable_trans, block=False))
