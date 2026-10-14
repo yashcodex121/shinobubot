@@ -12,10 +12,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 BLUE, GREEN, RED = "primary", "success", "danger"
 
 
-def btn(text, data=None, style=None, url=None):
+def btn(text, data=None, style=None, url=None, switch=None):
     kw = {"api_kwargs": {"style": style}} if style else {}
     if url:
         return InlineKeyboardButton(text, url=url, **kw)
+    if switch is not None:
+        return InlineKeyboardButton(text, switch_inline_query_current_chat=switch, **kw)
     return InlineKeyboardButton(text, callback_data=data, **kw)
 
 

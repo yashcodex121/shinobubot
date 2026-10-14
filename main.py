@@ -3,7 +3,8 @@ from telegram.ext import Application
 
 import config
 from database import mongo
-from handlers import actions, admin, chat, economy, games, help as help_h, qr, quote, romance, start
+from handlers import (actions, admin, chat, economy, fileids, games, help as help_h,
+                      qr, quote, romance, start)
 from utils.logger import log
 
 
@@ -15,6 +16,8 @@ async def post_init(app):
         BotCommand("daily", "Daily reward"), BotCommand("rob", "Rob a user"),
         BotCommand("propose", "Propose marriage"), BotCommand("mines", "Play Mines"),
         BotCommand("qr", "Text to QR sticker"), BotCommand("q", "Quote message as sticker"),
+        BotCommand("gid", "GIF file_id"), BotCommand("sid", "Sticker file_id"),
+        BotCommand("fid", "Any media file_id"),
     ])
     log.info("Nova is online as @%s", app.bot.username)
 
@@ -27,7 +30,7 @@ def main():
     if not config.BOT_TOKEN:
         raise SystemExit("Set BOT_TOKEN in .env")
     app = Application.builder().token(config.BOT_TOKEN).post_init(post_init).build()
-    for m in (admin, start, help_h, economy, actions, romance, games, qr, quote, chat):
+    for m in (admin, start, help_h, economy, actions, romance, games, qr, quote, chat, fileids):
         m.register(app)
     app.add_error_handler(on_error)
     app.run_polling(allowed_updates=["message", "callback_query", "message_reaction",
