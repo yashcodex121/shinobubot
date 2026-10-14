@@ -254,9 +254,11 @@ async def _creator_cmd(update, ctx, fn_name):
     chat, u = update.effective_chat, update.effective_user
     g = GAMES.get(chat.id)
     if not g:
-        return await update.effective_message.reply_text("No game here.")
+        await update.effective_message.reply_text("No game here.")
+        return None
     if u.id != g["creator"]:
-        return await update.effective_message.reply_text("Only the game creator can do that.")
+        await update.effective_message.reply_text("Only the game creator can do that.")
+        return None
     return g
 
 
