@@ -197,7 +197,8 @@ def register(app):
                                    caption_dispatch, block=False))
     app.add_handler(CallbackQueryHandler(on_pack, pattern=r"^sidpack:"), )
     app.add_handler(MessageHandler(
-        filters.ChatType.ALL & (filters.ANIMATION | filters.Sticker.ALL | filters.PHOTO |
-                                filters.VIDEO | filters.Document.ALL | filters.AUDIO |
-                                filters.VOICE | filters.VIDEO_NOTE),
+        (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP | filters.ChatType.PRIVATE) &
+        (filters.ANIMATION | filters.Sticker.ALL | filters.PHOTO |
+         filters.VIDEO | filters.Document.ALL | filters.AUDIO |
+         filters.VOICE | filters.VIDEO_NOTE),
         remember, block=False), group=5)
