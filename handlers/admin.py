@@ -6,6 +6,7 @@ from telegram.constants import ParseMode
 from telegram.ext import (ApplicationHandlerStop, CallbackQueryHandler, CommandHandler, MessageHandler, TypeHandler, filters)
 from telegram import Update
 
+import config
 from database import mongo
 from keyboards.ui import BLUE, GREEN, RED, btn, kb
 from utils.permissions import is_admin, is_owner
@@ -168,7 +169,7 @@ async def addsudo(update, ctx):
     """Owner only: reply to a user (or pass an id) to add them to the sudo list."""
     msg = update.effective_message
     if not is_owner(update.effective_user.id):
-        return await msg.reply_text("🚫 Sirf bot owner ye command chala sakta hai.")
+        return await msg.reply_text("🚫 Only the bot owner can use this command.")
     r = msg.reply_to_message
     uid = r.from_user.id if (r and r.from_user) else (int(ctx.args[0]) if ctx.args and ctx.args[0].lstrip("-").isdigit() else None)
     if not uid:
@@ -189,6 +190,25 @@ async def addsudo(update, ctx):
     await msg.reply_text(
         text, parse_mode=HTML,
         reply_markup=kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=GREEN)]]))
+
+
+# Verified Telegram file_id (same source the propose GIFs use — stable across restarts)
+SUDO_BANNER = "CgACAgQAAxkBAAPUas814aNjcToWI4d4tf-vL4abTEsAAuQCAAIfAAEUU_o6VElEQe6LPQQ"
+
+
+async def sudolist(update, ctx):
+    """Public: banner GIF + every sudo (owner/config admins + db sudos) + Support/Add-me buttons."""
+    ids = set(config.ADMIN_IDS) | {d["_id"] for d in await mongo.db.admins.find({}).to_list(1000)}
+    lines = [f"{i}➤ <code>{uid}</code>" for i, uid in enumerate(sorted(ids), 1)] or ["No sudos yet."]
+    text = "ꜱᴜᴅᴏ ᴜꜱᴇʀꜱ :\n" + "\n".join(lines)
+    markup = kb([[btn("Support", url="https://t.me/NovaSupport", style=RED),
+                  btn("Add me", url=f"https://t.me/{ctx.bot.username}?startgroup=true", style=BLUE)]])
+    try:
+        await update.effective_message.reply_animation(
+            animation=SUDO_BANNER, caption=text, parse_mode=HTML, reply_markup=markup)
+    except Exception:
+        # banner file_id unavailable on this bot — send plain text with same layout
+        await update.effective_message.reply_text(text, parse_mode=HTML, reply_markup=markup)
 
 
 @admin_only
@@ -253,6 +273,7 @@ def register(app):
     app.add_handler(CommandHandler("ban", ban))
     app.add_handler(CommandHandler("unban", unban))
     app.add_handler(CommandHandler("addsudo", addsudo))
+    app.add_handler(CommandHandler("sudolist", sudolist))
     app.add_handler(CommandHandler("maintenance", maintenance))
     app.add_handler(CommandHandler("setwelcome", setwelcome))
     app.add_handler(CommandHandler("broadcast", broadcast))

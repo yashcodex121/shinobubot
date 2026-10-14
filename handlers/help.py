@@ -32,7 +32,7 @@ PAGES = {
     "admins": (
         "🛡️ <b>Admins</b>\n\n"
         "/admin — dashboard\n/stats — bot statistics\n/ban /unban — manage access (reply or id)\n"
-        "/addsudo — (owner) promote a user to sudo\n"
+        "/addsudo — (owner) promote a user to sudo\n/sudolist — list all sudo users\n"
         "/broadcast — announce\n/maintenance — toggle maintenance\n/setwelcome — welcome message"
     ),
 }
