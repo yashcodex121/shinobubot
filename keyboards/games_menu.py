@@ -2,7 +2,7 @@ from keyboards.ui import RED, btn, kb, rainbow
 
 # key, label, how-to, commands, implemented?
 GAMES = [
-    ("uno", "🃏 UNO", "Multiplayer card game. Match colour/number, use special cards, shout UNO!", "/uno", False),
+    ("uno", "🃏 UNO", "Multiplayer card game. /new opens a lobby, others /join, creator /start (2+ players). Play by typing the bot's @username inline — tap your cards, draw, or ? for game state. /leave to quit · /skip after 90s · /notify_me for new-game alerts · creator: /close /open /kick /kill /enable_translations /disable_translations", "/new", True),
     ("mines", "💣 Mines", "Reveal safe tiles to grow your multiplier. Hit a mine and you lose the bet. Cash out anytime.", "/mines &lt;bet&gt;", True),
     ("rps", "🪨 RPS", "Rock-Paper-Scissors against the bot.", "/rps", True),
     ("wordseek", "🔎 Wordseek", "A word-guessing game (like Wordle). Guess the hidden word by typing it in chat!\n\n/wordseek or /ws — Start a 5-letter game.\n/ws4 or /ws6 — Start a 4-letter or 6-letter game.\n/end — End any active game.", "/wordseek or /ws", True),

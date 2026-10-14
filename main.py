@@ -30,7 +30,8 @@ def main():
     for m in (admin, start, help_h, economy, actions, romance, games, qr, quote, chat):
         m.register(app)
     app.add_error_handler(on_error)
-    app.run_polling(allowed_updates=["message", "callback_query", "message_reaction"])
+    app.run_polling(allowed_updates=["message", "callback_query", "message_reaction",
+                                     "inline_query", "chosen_inline_result"])
 
 
 if __name__ == "__main__":
