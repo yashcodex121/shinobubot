@@ -4,10 +4,13 @@ import io
 from PIL import Image, ImageDraw, ImageFont
 from telegram.ext import CommandHandler
 
-W = H = 512
-CARD = (23, 33, 43, 255)        # dark card background (matches the example)
-ACCENT = (136, 175, 255, 255)   # name colour / fallback avatar
+W = 512                          # sticker side that must stay exactly 512
+HMAX = 512
+TEXT_C = (38, 38, 54, 255)       # dark text reads on the pale holo card
+NAME_C = (106, 66, 186, 255)     # deep purple name
 WHITE = (255, 255, 255, 255)
+# holographic pastel stops (pink -> lilac -> sky -> mint -> cream)
+HOLO = [(255, 178, 221), (214, 178, 255), (173, 216, 255), (174, 255, 234), (255, 240, 199)]
 
 # (bold, regular) pairs, first existing wins — DejaVu on the VPS/Linux, Arial on Windows/macOS
 _FONT_PAIRS = [
@@ -93,53 +96,74 @@ def _circle_avatar(data: bytes, size=96):
         return None
 
 
-def _fallback_avatar(name: str, size=96):
+def _holo_bg(w, h):
+    """Iridescent pastel gradient (holographic look), blended across width."""
+    stops = len(HOLO) - 1
+    row = []
+    for x in range(w):
+        t = x / max(1, w - 1) * stops
+        i = min(int(t), stops - 1)
+        f = t - i
+        a, b = HOLO[i], HOLO[i + 1]
+        row.append(tuple(int(a[c] + (b[c] - a[c]) * f) for c in range(3)))
+    base = Image.new("RGB", (w, 1))
+    base.putdata(row)
+    return base.resize((w, h))
+
+
+def _fallback_avatar(name: str, size=72):
     av = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(av)
-    d.ellipse((0, 0, size, size), fill=ACCENT)
+    d.ellipse((0, 0, size, size), fill=WHITE)
     letter = (name.strip() or "?")[0].upper()
     f = _NAME_F
-    for bold, _ in _FONT_PAIRS:            # 44px bold letter, first font that exists
+    for bold, _ in _FONT_PAIRS:            # ~46% of the circle, first font that exists
         try:
-            f = ImageFont.truetype(bold, 44)
+            f = ImageFont.truetype(bold, max(18, int(size * 0.46)))
             break
         except OSError:
             continue
     bb = d.textbbox((0, 0), letter, font=f)
     d.text(((size - (bb[2] - bb[0])) // 2 - bb[0], (size - (bb[3] - bb[1])) // 2 - bb[1]),
-           letter, font=f, fill=WHITE)
+           letter, font=f, fill=NAME_C)
     return av
 
 
 def _quote_png(name: str, text: str, avatar: bytes = None) -> io.BytesIO:
-    canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(canvas)
-    d.rounded_rectangle((0, 0, W - 1, H - 1), radius=40, fill=CARD)
-
-    av = _circle_avatar(avatar) if avatar else None
-    if av is None:
-        av = _fallback_avatar(name)
-    canvas.paste(av, (32, 32), av)
+    pad, av_size = 28, 72
 
     name = _renderable(name, _NAME_F)
-    full = name
-    max_name_px = W - 32 - 148 - 8
-    while name and d.textlength(name, font=_NAME_F) > max_name_px:
-        name = name[:-1]
-    if name != full:
+    max_name_px = W - pad - av_size - 16 - pad
+    if _NAME_F.getlength(name) > max_name_px:
+        while name and _NAME_F.getlength(name + "…") > max_name_px:  # ellipsis inside the budget
+            name = name[:-1]
         name += "…"
-    d.text((148, 56), name, font=_NAME_F, fill=ACCENT)
 
     body = _renderable(text, _TEXT_F)
-    lines = _wrap(body, _TEXT_F, W - 64)
-    max_lines = 7
-    if len(lines) > max_lines:
-        lines = lines[:max_lines]
+    all_lines = _wrap(body, _TEXT_F, W - 2 * pad)
+    lines = all_lines[:7]
+    if len(all_lines) > 7:
         lines[-1] = lines[-1].rstrip("…") + "…"
-    y = 168
+
+    # adaptive height: hug the content instead of a fixed square
+    top = pad + av_size + 24
+    h = min(HMAX, max(200, top + len(lines) * 40 + 22))
+    canvas = Image.new("RGBA", (W, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(canvas)
+    mask = Image.new("L", (W, h), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, W - 1, h - 1), radius=28, fill=255)
+    canvas.paste(_holo_bg(W, h), (0, 0), mask)
+
+    av = _circle_avatar(avatar, size=av_size) if avatar else None
+    if av is None:
+        av = _fallback_avatar(name or "?", size=av_size)
+    canvas.paste(av, (pad, pad), av)
+
+    d.text((pad + av_size + 16, pad + 14), name, font=_NAME_F, fill=NAME_C)
+    y = top
     for ln in lines:
-        d.text((32, y), ln, font=_TEXT_F, fill=WHITE)
-        y += 44
+        d.text((pad, y), ln, font=_TEXT_F, fill=TEXT_C)
+        y += 40
 
     buf = io.BytesIO()
     canvas.save(buf, format="PNG")
