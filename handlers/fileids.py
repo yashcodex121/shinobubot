@@ -101,8 +101,7 @@ async def gid(update, ctx):
     got = _resolve(update, "gif")
     if not got:
         return await update.effective_message.reply_text(
-            "Send me a GIF first (or reply to one) — then /gid.\n"
-            "You can also send the GIF with /gid as its caption.")
+            "🎬 Reply to a GIF with /gid — or send the GIF with /gid as its caption.")
     await _reply_id(update, "🎬 <b>GIF file_id</b>", got[1])
 
 
@@ -120,8 +119,8 @@ async def fid(update, ctx):
             got = (last["kind"], last["file_id"], last["set"], last["premium"])
     if not got:
         return await msg.reply_text(
-            "Send any file (photo, video, document, audio, voice, GIF, sticker) "
-            "then /fid — or reply to it with /fid.")
+            "📎 Reply to any file with /fid — photo, video, document, audio, "
+            "voice, GIF or sticker.")
     kind = {"gif": "🎬 GIF", "sticker": "🏷 Sticker", "photo": "📷 Photo", "video": "🎥 Video",
             "document": "📄 Document", "audio": "🎵 Audio", "voice": "🎤 Voice",
             "video_note": " round video note"}[got[0]]
@@ -133,8 +132,7 @@ async def sid(update, ctx):
     got = _resolve(update, "sticker")
     if not got:
         return await update.effective_message.reply_text(
-            "Send me a sticker first (or reply to one) — then /sid.\n"
-            "Premium stickers work too.")
+            "🏷 Reply to a sticker with /sid — premium stickers work too.")
     _, fid_, set_name, premium = got
     rows = [[_support_btn()]]
     if premium and set_name:  # premium pack — dump every id in the pack
