@@ -15,11 +15,11 @@ HTML = ParseMode.HTML
 
 
 PROPOSE_GIFS = [
-    "https://media.giphy.com/media/l4FGni1RBAR2OWsGk/giphy.gif",
-    "https://media.giphy.com/media/3ohzdIuqJoo8QdKlnW/giphy.gif",
-    "https://media.giphy.com/media/xT9IgG50Lg7russbDa/giphy.gif",
-    "https://media.giphy.com/media/l0MYRzcWP7kQmzMnS/giphy.gif",
-    "https://media.giphy.com/media/26FLdmIp6wJr91JAI/giphy.gif",
+    "773292",
+    "773307",
+    "773313",
+    "773320",
+    "773326",
 ]
 
 
