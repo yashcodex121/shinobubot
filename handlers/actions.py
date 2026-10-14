@@ -56,12 +56,13 @@ async def rob(update, ctx):
             await mongo.db.action_stats.insert_one({"type": "rob", "ok": True, "by": md["_id"], "ts": time.time()})
             return await update.effective_message.reply_text(
                 f"🦹 {mention(me)} robbed <b>${amt:,}</b> from {mention(tgt)}!", parse_mode=HTML)
-    fine = min(md["balance"], max(1, amt // 2))
+    # Caught — fine is 10% of attempted amount (not 50%)
+    fine = min(md["balance"], max(1, amt // 10))
     if await users.take_balance(md["_id"], fine, "rob_fine"):
         await users.add_balance(td["_id"], fine, "rob_fine")
     await mongo.db.action_stats.insert_one({"type": "rob", "ok": False, "by": md["_id"], "ts": time.time()})
     await update.effective_message.reply_text(
-        f"🚨 {mention(me)} got caught and paid <b>${fine:,}</b> to {mention(tgt)}!", parse_mode=HTML)
+        f"🚨 {mention(me)} got caught and paid <b>${fine:,}</b> fine to {mention(tgt)}!", parse_mode=HTML)
 
 
 async def kill(update, ctx):
