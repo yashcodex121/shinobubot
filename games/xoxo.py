@@ -106,7 +106,7 @@ async def on_move(update, ctx):
         await safe_answer(q)
         return await q.edit_message_text(
             header(g) + f"Turn: ❌ {mention(g['p']['X'])}", parse_mode=ParseMode.HTML,
-            reply_markup=board_kb(g, bot_username=q.bot.username))
+            reply_markup=board_kb(g, bot_username=ctx.bot.username))
 
     cur = g["p"][g["turn"]]
     if q.from_user.id != cur.id:
@@ -129,13 +129,13 @@ async def on_move(update, ctx):
         return await q.edit_message_text(
             header(g) + f"🏆 {mention(cur)} wins! +$100",
             parse_mode=ParseMode.HTML,
-            reply_markup=board_kb(g, line, over=True, bot_username=q.bot.username))
+            reply_markup=board_kb(g, line, over=True, bot_username=ctx.bot.username))
 
     if " " not in g["b"]:
         return await q.edit_message_text(
             header(g) + "🤝 It's a draw!",
             parse_mode=ParseMode.HTML,
-            reply_markup=board_kb(g, (), over=True, bot_username=q.bot.username))
+            reply_markup=board_kb(g, (), over=True, bot_username=ctx.bot.username))
 
     g["turn"] = "O" if g["turn"] == "X" else "X"
     nxt = g["p"][g["turn"]]
@@ -143,7 +143,7 @@ async def on_move(update, ctx):
     await q.edit_message_text(
         header(g) + f"Turn: {'❌' if g['turn'] == 'X' else '⭕'} {mention(nxt)}",
         parse_mode=ParseMode.HTML,
-        reply_markup=board_kb(g, bot_username=q.bot.username))
+        reply_markup=board_kb(g, bot_username=ctx.bot.username))
 
 
 def register(app):
