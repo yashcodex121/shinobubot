@@ -104,7 +104,12 @@ YAAD RAKH: Tu assistant nahi. Tu Nova hai — ek real desi girl. Aise hi bol, ai
 
 async def _get_history(user_id: int) -> list:
     doc = await mongo.db.chat_memory.find_one({"_id": user_id})
-    return doc.get("history", []) if doc else []
+    history = doc.get("history", []) if doc else []
+    # Fix old Gemini-format roles ("model" → "assistant")
+    for entry in history:
+        if entry.get("role") == "model":
+            entry["role"] = "assistant"
+    return history
 
 
 async def _save_history(user_id: int, history: list):
