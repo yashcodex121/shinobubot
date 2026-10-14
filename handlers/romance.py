@@ -15,11 +15,10 @@ HTML = ParseMode.HTML
 
 
 PROPOSE_GIFS = [
-    "https://media.tenor.com/x8v1oNUOmg4AAAAM/propose-love.gif",
-    "https://media.tenor.com/vGfn1oMYr6EAAAAM/propose-ring.gif",
-    "https://media.tenor.com/Zzx-w97IWkgAAAAM/proposing-will-you-marry-me.gif",
-    "https://media.tenor.com/nHbkJcmPzVQAAAAM/marry-me-proposal.gif",
-    "https://media.tenor.com/7NkFnKGIWlEAAAAM/proposal-ring.gif",
+    "CgACAgQAAxkBAAPUas814aNjcToWI4d4tf-vL4abTEsAAuQCAAIfAAEUU_o6VElEQe6LPQQ",
+    "CgACAgQAAxkBAAPYas83Pvi8HzMnGAtBxMxe1EWFuYoAAncDAAIBonxTpH0uKXqroLs9BA",
+    "CgACAgQAAxkBAAPaas83UYOTMstmWyPBiQAB3QQRUvQSAAIRCwACF1ycUFLrJgRzhLbuPQQ",
+    "CgACAgQAAxkBAAPcas83ZpnOIfMSxcWLzmNTaXB5iSEAAjMFAAKR221QTvfqrOlmgQk9BA",
 ]
 
 
