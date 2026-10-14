@@ -51,7 +51,7 @@ def board_kb(g, win_line=(), over=False, bot_username=""):
     if over:
         rows.append([btn("🔁 Rematch", "xo:re", GREEN)])
     if bot_username:
-        rows.append([btn("➕ Add me to your group", url=f"https://t.me/{bot_username}?startgroup=true")])
+        rows.append([btn("➕ Add me to your group", url=f"https://t.me/{bot_username}?startgroup=true", style=BLUE)])
     return kb(rows)
 
 
