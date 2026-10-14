@@ -9,8 +9,8 @@ def _ids(name):
 
 
 def _keys(name):
-    """Parse comma-separated API keys from env."""
-    raw = os.getenv(name, "")
+    """Parse comma-separated API keys from env. Also checks singular form."""
+    raw = os.getenv(name) or os.getenv(name.rstrip("S")) or ""
     return [k.strip() for k in raw.split(",") if k.strip()]
 
 
