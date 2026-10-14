@@ -7,7 +7,7 @@ from telegram import Update
 
 from database import mongo
 from keyboards.ui import BLUE, GREEN, RED, btn, kb
-from utils.permissions import is_admin
+from utils.permissions import is_admin, is_owner
 from utils.helpers import safe_answer
 
 HTML = ParseMode.HTML
@@ -138,6 +138,32 @@ async def get_id(update, ctx):
     return int(ctx.args[0]) if ctx.args and ctx.args[0].lstrip("-").isdigit() else None
 
 
+def _target_id(update, ctx):
+    """Target user id: replied message's sender, else first numeric arg."""
+    r = update.effective_message.reply_to_message
+    if r and r.from_user:
+        return r.from_user.id
+    return int(ctx.args[0]) if ctx.args and ctx.args[0].lstrip("-").isdigit() else None
+
+
+async def addsudo(update, ctx):
+    """Owner only: reply to a user (or pass an id) to make them a sudo admin."""
+    msg = update.effective_message
+    if not is_owner(update.effective_user.id):
+        return await msg.reply_text("🚫 Sirf bot owner ye command chala sakta hai.")
+    uid = _target_id(update, ctx)
+    if not uid:
+        return await msg.reply_text("Reply to a user with /addsudo (or /addsudo <user_id>).")
+    if await mongo.db.admins.find_one({"_id": uid}):
+        text = f"ℹ️ <code>{uid}</code> is already a sudo admin."
+    else:
+        await mongo.db.admins.insert_one({"_id": uid, "ts": time.time(), "by": update.effective_user.id})
+        text = f"✅ <code>{uid}</code> is now a sudo admin."
+    await msg.reply_text(
+        text, parse_mode=HTML,
+        reply_markup=kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=GREEN)]]))
+
+
 @admin_only
 async def ban(update, ctx):
     uid = _target_id(update, ctx)
@@ -199,6 +225,7 @@ def register(app):
     app.add_handler(CommandHandler("stats", stats))
     app.add_handler(CommandHandler("ban", ban))
     app.add_handler(CommandHandler("unban", unban))
+    app.add_handler(CommandHandler("addsudo", addsudo))
     app.add_handler(CommandHandler("maintenance", maintenance))
     app.add_handler(CommandHandler("setwelcome", setwelcome))
     app.add_handler(CommandHandler("broadcast", broadcast))
