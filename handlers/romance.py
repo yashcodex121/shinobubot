@@ -14,6 +14,15 @@ from utils.validators import mention, mention_doc, reply_target
 HTML = ParseMode.HTML
 
 
+PROPOSE_GIFS = [
+    "https://media.giphy.com/media/l4FGni1RBAR2OWsGk/giphy.gif",
+    "https://media.giphy.com/media/3ohzdIuqJoo8QdKlnW/giphy.gif",
+    "https://media.giphy.com/media/xT9IgG50Lg7russbDa/giphy.gif",
+    "https://media.giphy.com/media/l0MYRzcWP7kQmzMnS/giphy.gif",
+    "https://media.giphy.com/media/26FLdmIp6wJr91JAI/giphy.gif",
+]
+
+
 async def propose(update, ctx):
     me, tgt = update.effective_user, reply_target(update)
     msg = update.effective_message
@@ -26,9 +35,15 @@ async def propose(update, ctx):
     doc = await mongo.db.marriages.insert_one(
         {"a": me.id, "b": tgt.id, "status": "pending", "expires": time.time() + config.PROPOSAL_TTL, "ts": time.time()})
     pid = str(doc.inserted_id)
-    await msg.reply_text(
-        f"💍 {mention(me)} proposes to {mention(tgt)}!\nDo you accept?", parse_mode=HTML,
-        reply_markup=kb([[btn("💖 Accept", f"mr:y:{pid}", GREEN), btn("💔 Decline", f"mr:n:{pid}", RED)]]))
+    text = f"💍 {mention(me)} proposes to {mention(tgt)}!\nDo you accept?"
+    markup = kb([[btn("💖 Accept", f"mr:y:{pid}", GREEN), btn("💔 Decline", f"mr:n:{pid}", RED)]])
+    gif_url = random.choice(PROPOSE_GIFS)
+    await msg.reply_animation(
+        animation=gif_url,
+        caption=text,
+        parse_mode=HTML,
+        reply_markup=markup,
+    )
 
 
 async def on_proposal(update, ctx):
