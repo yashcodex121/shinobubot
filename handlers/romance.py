@@ -1,3 +1,4 @@
+import html
 import random
 import time
 
@@ -7,7 +8,7 @@ from telegram.constants import ChatType, ParseMode
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
 from database import mongo, users
-from keyboards.ui import GREEN, RED, btn, kb
+from keyboards.ui import BLUE, GREEN, RED, btn, kb
 from services.romance_service import active_marriage, partner_of
 from utils.validators import mention, mention_doc, reply_target
 
@@ -117,15 +118,37 @@ async def track(update, ctx):
 async def couple(update, ctx):
     if update.effective_chat.type not in (ChatType.GROUP, ChatType.SUPERGROUP):
         return await update.effective_message.reply_text("👥 This command works in groups only.")
+    msg = update.effective_message
+    me = update.effective_user
+    tgt = reply_target(update)
+    if tgt and tgt.id == me.id:
+        tgt = None
     rows = await mongo.db.group_members.find({"chat": update.effective_chat.id}).to_list(500)
-    if len(rows) < 2:
-        return await update.effective_message.reply_text("Need at least 2 active members first. Chat a bit!")
-    a, b = random.sample(rows, 2)
+    if tgt:  # replied to someone -> ship them with a random active member
+        others = [r for r in rows if r["uid"] != tgt.id]
+        if not others:
+            return await msg.reply_text("Need at least 2 active members first. Chat a bit!")
+        a = {"uid": tgt.id, "name": tgt.full_name}
+        b = random.choice(others)
+    else:
+        if len(rows) < 2:
+            return await msg.reply_text("Need at least 2 active members first. Chat a bit!")
+        a, b = random.sample(rows, 2)
     score = random.randint(1, 100)
     bar = "💖" * (score // 10) + "🖤" * (10 - score // 10)
-    await update.effective_message.reply_text(
-        f'💘 <b>Couple of the moment</b>\n\n<a href="tg://user?id={a["uid"]}">{a["name"]}</a> ❤️ '
-        f'<a href="tg://user?id={b["uid"]}">{b["name"]}</a>\n\nCompatibility: {bar} <b>{score}%</b>', parse_mode=HTML)
+    text = (
+        f'💘 <b>Couple of the moment</b>\n\n'
+        f'<a href="tg://user?id={a["uid"]}">{html.escape(a["name"])}</a> ❤️ '
+        f'<a href="tg://user?id={b["uid"]}">{html.escape(b["name"])}</a>\n\n'
+        f'Potential: {bar} <b>{score}%</b>'
+    )
+    markup = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+    await msg.reply_animation(
+        animation=random.choice(PROPOSE_GIFS),
+        caption=text,
+        parse_mode=HTML,
+        reply_markup=markup,
+    )
 
 
 def register(app):

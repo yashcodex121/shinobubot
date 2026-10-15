@@ -27,7 +27,7 @@ PAGES = {
         "💗 <b>Romance</b>\n\n"
         "/propose — reply to someone to propose\n/divorce — end your marriage\n"
         "/marriage or /married — marriage status (reply for others)\n"
-        "/couple or /shippering — ship two random group members"
+        "/couple or /shipering — ship two members (reply to fix one)"
     ),
     "admins": (
         "🛡️ <b>Admins</b>\n\n"
