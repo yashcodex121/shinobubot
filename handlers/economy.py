@@ -48,6 +48,14 @@ async def give(update, ctx):
 
 
 async def toprich(update, ctx):
+    rows = await economy_service.top_rich(3)
+    medals = ["🥇", "🥈", "🥉"]
+    text = "🏆 <b>Richest players</b>\n\n" + "\n".join(
+        f"{medals[i]} {mention_doc(d)} — <b>${d['balance']:,}</b>" for i, d in enumerate(rows))
+    await update.effective_message.reply_text(text, parse_mode=HTML)
+
+
+async def leaderboard(update, ctx):
     rows = await economy_service.top_rich()
     medals = ["🥇", "🥈", "🥉"] + ["🔹"] * 7
     text = "🏆 <b>Richest players</b>\n\n" + "\n".join(
@@ -65,5 +73,6 @@ def register(app):
     app.add_handler(CommandHandler(["balance", "bal"], balance))
     app.add_handler(CommandHandler("daily", daily))
     app.add_handler(CommandHandler("give", give))
-    app.add_handler(CommandHandler(["toprich", "leaderboard"], toprich))
+    app.add_handler(CommandHandler("toprich", toprich))
+    app.add_handler(CommandHandler("leaderboard", leaderboard))
     app.add_handler(CommandHandler("rank", rank))

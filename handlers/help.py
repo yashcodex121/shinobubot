@@ -14,7 +14,7 @@ PAGES = {
         "💰 <b>Economy</b>\n\n"
         "/balance or /bal — balance & XP\n/daily — daily reward (24h)\n"
         "/give &lt;amount&gt; — reply to a user to pay them\n"
-        "/toprich or /leaderboard — richest players\n/rank — your XP rank"
+        "/toprich — top 3 richest\n/leaderboard — top 10 richest\n/rank — your XP rank"
     ),
     "actions": (
         "⚡ <b>Actions</b>\n\n"
