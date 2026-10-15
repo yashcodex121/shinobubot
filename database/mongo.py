@@ -16,3 +16,4 @@ async def init():
     await db.marriages.create_index([("a", 1), ("status", 1)])
     await db.marriages.create_index([("b", 1), ("status", 1)])
     await db.group_members.create_index([("chat", 1), ("uid", 1)], unique=True)
+    await db.file_ids.create_index("n", unique=True)  # numeric file-id codes

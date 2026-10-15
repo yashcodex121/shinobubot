@@ -5,15 +5,21 @@ Works in groups and in the bot's DM. Three ways to point at the media:
   2. Send the media with the command as its caption (/gid on a GIF)
   3. Just send the media first, then type the command (last media is
      remembered per user per chat)
+Every file_id is answered as a stable numeric code (100001, 100002, …)
+stored in Mongo; /fid <number> converts a code back to its raw file_id.
 Replies carry an inline-Support button; premium stickers also get a blue
-"View All" button that dumps every sticker file_id in that pack.
+"View All" button that dumps a code for every sticker in that pack.
 """
 import html
+import re
 import time
 
+from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 from telegram.constants import ParseMode
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
+from database import mongo
 from keyboards.ui import BLUE, btn, kb
 
 HTML = ParseMode.HTML
@@ -81,6 +87,27 @@ def _resolve(update, want):
     return None
 
 
+_FID_RE = re.compile(r"[A-Za-z0-9_-]{20,300}")
+
+
+async def _num_of(file_id: str) -> int:
+    """Stable short number for a file_id — persisted in Mongo, survives restarts."""
+    d = await mongo.db.file_ids.find_one({"_id": file_id})
+    if d:
+        return d["n"]
+    seq = await mongo.db.counters.find_one_and_update(
+        {"_id": "file_ids"}, {"$inc": {"seq": 1}},
+        upsert=True, return_document=ReturnDocument.AFTER)
+    n = 100000 + seq["seq"]
+    try:
+        await mongo.db.file_ids.insert_one({"_id": file_id, "n": n})
+    except DuplicateKeyError:  # raced with a concurrent request
+        d = await mongo.db.file_ids.find_one({"_id": file_id})
+        if d:
+            n = d["n"]
+    return n
+
+
 def _support_btn():
     """Blue Support button -> the support group (same as admin.py)."""
     return btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)
@@ -91,9 +118,26 @@ def _support_kb():
 
 
 async def _reply_id(update, title, file_id, markup=None):
-    text = f"{title}\n<code>{html.escape(file_id)}</code>"
+    num = await _num_of(file_id)
+    text = f"{title}\n<code>{num}</code>"
     await update.effective_message.reply_text(
         text, parse_mode=HTML, reply_markup=markup or _support_kb())
+
+
+async def _reply_raw(update, title, file_id):
+    text = f"{title}\n<code>{html.escape(file_id)}</code>"
+    await update.effective_message.reply_text(
+        text, parse_mode=HTML, reply_markup=_support_kb())
+
+
+async def _by_number(update, n):
+    """Number → raw file_id (reverse lookup)."""
+    d = await mongo.db.file_ids.find_one({"n": n})
+    if not d:
+        return await update.effective_message.reply_text(
+            f"❌ Unknown number: <code>{n}</code> — send the file first, then /fid.",
+            parse_mode=HTML, reply_markup=_support_kb())
+    await _reply_raw(update, "📎 <b>file_id for number</b>", d["_id"])
 
 
 async def gid(update, ctx):
@@ -102,13 +146,25 @@ async def gid(update, ctx):
     if not got:
         return await update.effective_message.reply_text(
             "🎬 Reply to a GIF with /gid — or send the GIF with /gid as its caption.")
-    await _reply_id(update, "🎬 <b>GIF file_id</b>", got[1])
+    await _reply_id(update, "🎬 <b>GIF code</b>", got[1])
 
 
 async def fid(update, ctx):
-    """/fid — file_id of any media (photo, video, document, audio, voice...)."""
+    """/fid — numeric code of any media; /fid <number> gives its file_id back."""
     msg = update.effective_message
     u = update.effective_user
+    args = ctx.args or []
+    if args:
+        a = args[0]
+        if a.isdigit():
+            return await _by_number(update, int(a))
+        if _FID_RE.fullmatch(a):
+            return await msg.reply_text(
+                f"🔢 <b>Number</b>\n<code>{await _num_of(a)}</code>",
+                parse_mode=HTML, reply_markup=_support_kb())
+        return await msg.reply_text(
+            "📎 Reply to a file with /fid — or /fid &lt;number&gt; to get its file_id back.",
+            parse_mode=HTML)
     got = _media_of(msg)
     if not got:
         r = msg.reply_to_message
@@ -124,7 +180,7 @@ async def fid(update, ctx):
     kind = {"gif": "🎬 GIF", "sticker": "🏷 Sticker", "photo": "📷 Photo", "video": "🎥 Video",
             "document": "📄 Document", "audio": "🎵 Audio", "voice": "🎤 Voice",
             "video_note": " round video note"}[got[0]]
-    await _reply_id(update, f"{kind} <b>file_id</b>", got[1])
+    await _reply_id(update, f"{kind} <b>code</b>", got[1])
 
 
 async def sid(update, ctx):
@@ -142,10 +198,10 @@ async def sid(update, ctx):
             for k in list(PACKS)[:100]:
                 PACKS.pop(k, None)
         rows.append([btn("🔵 View All (Premium)", f"sidpack:{_seq[0]}", BLUE)])
-    lines = [f"🏷 <b>Sticker file_id</b>" + ("  ·  ⭐ Premium" if premium else "")]
+    lines = ["🏷 <b>Sticker code</b>" + ("  ·  ⭐ Premium" if premium else "")]
     if set_name:
         lines.append(f"Pack: <i>{html.escape(set_name)}</i>")
-    lines.append(f"<code>{html.escape(fid_)}</code>")
+    lines.append(f"<code>{await _num_of(fid_)}</code>")
     await update.effective_message.reply_text(
         "\n".join(lines), parse_mode=HTML, reply_markup=kb(rows))
 
@@ -168,7 +224,7 @@ async def on_pack(update, ctx):
               f"<i>Tap &amp; hold any id to copy.</i>\n\n")
     chunk, n = header, 0
     for i, st in enumerate(stickers, 1):
-        line = f"{i}. {st.emoji or ''} <code>{html.escape(st.file_id)}</code>\n"
+        line = f"{i}. {st.emoji or ''} <code>{await _num_of(st.file_id)}</code>\n"
         if len(chunk) + len(line) > 3800:
             await ctx.bot.send_message(q.message.chat_id, chunk, parse_mode=HTML)
             chunk, n = "", 0

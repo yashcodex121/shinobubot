@@ -8,6 +8,7 @@ from telegram import Update
 
 import config
 from database import mongo
+from handlers.fileids import _num_of
 from keyboards.ui import BLUE, GREEN, RED, btn, kb
 from utils.permissions import is_admin, is_owner
 from utils.helpers import safe_answer
@@ -107,7 +108,7 @@ async def get_file_id(update, ctx):
 
     support_kb = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
     await msg.reply_text(
-        f"{file_type}\n<code>{file_id}</code>",
+        f"{file_type}\n<code>{await _num_of(file_id)}</code>",
         parse_mode=HTML,
         reply_markup=support_kb,
     )
