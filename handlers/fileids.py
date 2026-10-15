@@ -21,6 +21,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, f
 
 from database import mongo
 from keyboards.ui import BLUE, btn, kb
+from utils.logger import log
 
 HTML = ParseMode.HTML
 
@@ -174,6 +175,11 @@ async def fid(update, ctx):
         if last and time.time() - last["ts"] <= 1800:
             got = (last["kind"], last["file_id"], last["set"], last["premium"])
     if not got:
+        r = msg.reply_to_message
+        log.info("fid: nothing found | chat=%s type=%s reply=%s reply_media=%s last=%s args=%s",
+                 msg.chat_id, getattr(msg.chat, "type", "?"),
+                 bool(r), _media_of(r) is not None if r else False,
+                 bool(LAST.get((msg.chat_id, u.id))), args)
         return await msg.reply_text(
             "📎 Reply to any file with /fid — photo, video, document, audio, "
             "voice, GIF or sticker.")
