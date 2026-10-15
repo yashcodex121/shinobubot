@@ -17,19 +17,20 @@ PUZZLE_PIECES = (
     "5332757267320184654", "5332386152081038791", "5332491133966659316",
     "5334749990411608332",
 )
-# the 7 sticker pieces arranged as a grid (4 + 3 rows), pushed right with
-# padding so they sit in the empty area beside the feature lines
-_PUZZLE_ROWS = (
-    "\u00a0" * 14 + "".join(f'<tg-emoji emoji-id="{n}">\U0001f9e9</tg-emoji>' for n in PUZZLE_PIECES[:4]) + "\n"
-    + "\u00a0" * 14 + "".join(f'<tg-emoji emoji-id="{n}">\U0001f9e9</tg-emoji>' for n in PUZZLE_PIECES[4:])
-)
+# the 7 sticker pieces arranged beside the feature lines (right side of the
+# empty area): 4 next to "Chat & Friends", 3 next to "Romance & Flirt"
+_PAD = "\u00a0"
+_PUZZLE_R1 = "".join(f'<tg-emoji emoji-id="{n}">\U0001f9e9</tg-emoji>' for n in PUZZLE_PIECES[:4])
+_PUZZLE_R2 = "".join(f'<tg-emoji emoji-id="{n}">\U0001f9e9</tg-emoji>' for n in PUZZLE_PIECES[4:])
 
 _WELCOME = (
     '<tg-emoji emoji-id="5999025042753590996">✨</tg-emoji>𝑯̲𝒆̲𝒚̲, 𝑾̲𝒆̲𝒍̲𝒄̲𝒐̲𝒎̲𝒆̲ 𝑻̲𝒐̲ 𝑺̲𝒉̲𝒊̲𝒏̲𝒐̲𝒃̲𝒖̲ '
     '<tg-emoji emoji-id="6174884334114182449">✨</tg-emoji>\n\n'
-    '<tg-emoji emoji-id="6001564910318786723">✨</tg-emoji> 𝗖̲𝗵̲𝗮̲𝘁̲ &𝗙̲𝗿̲𝗶̲𝗲̲𝗻̲𝗱̲𝘀̲\n'
-    '<tg-emoji emoji-id="6127558265573218459">✨</tg-emoji> 𝑹̲𝒐̲𝒎̲𝒂̲𝒏̲𝒄̲𝒆̲ &𝑭̲𝒍̲𝒊̲𝒓̲𝒕̲\n'
-    '<tg-emoji emoji-id="5258508428212445001">✨</tg-emoji> 𝟮𝟬+ 𝗚̲𝗮̲𝗺̲𝗲̲𝘀̲ 𝗔̲𝘃̲𝗮̲𝗶̲𝗹̲𝗮̲𝗯̲𝗹̲𝗲\n' + _PUZZLE_ROWS + '\n\n'
+    '<tg-emoji emoji-id="6001564910318786723">✨</tg-emoji> 𝗖̲𝗵̲𝗮̲𝘁̲ &𝗙̲𝗿̲𝗶̲𝗲̲𝗻̲𝗱̲𝘀̲'
+    + _PAD * 12 + _PUZZLE_R1 + '\n'
+    '<tg-emoji emoji-id="6127558265573218459">✨</tg-emoji> 𝑹̲𝒐̲𝒎̲𝒂̲𝒏̲𝒄̲𝒆̲ &𝑭̲𝒍̲𝒊̲𝒓̲𝒕̲'
+    + _PAD * 10 + _PUZZLE_R2 + '\n'
+    '<tg-emoji emoji-id="5258508428212445001">✨</tg-emoji> 𝟮𝟬+ 𝗚̲𝗮̲𝗺̲𝗲̲𝘀̲ 𝗔̲𝘃̲𝗮̲𝗶̲𝗹̲𝗮̲𝗯̲𝗹̲𝗲\n\n'
     '<tg-emoji emoji-id="6124898345082165755">✨</tg-emoji> 𝑪𝒉𝒂𝒕 • 𝑭𝒍𝒊𝒓𝒕 • 𝑷𝒍𝒂𝒚 '
     '<tg-emoji emoji-id="6127546175240280564">✨</tg-emoji>'
 )
