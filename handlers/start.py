@@ -27,7 +27,7 @@ _WELCOME = (
     '<tg-emoji emoji-id="6174884334114182449">✨</tg-emoji>\n\n'
     '<tg-emoji emoji-id="6001564910318786723">✨</tg-emoji> 𝗖̲𝗵̲𝗮̲𝘁̲ &𝗙̲𝗿̲𝗶̲𝗲̲𝗻̲𝗱̲𝘀̲\n'
     '<tg-emoji emoji-id="6127558265573218459">✨</tg-emoji> 𝑹̲𝒐̲𝒎̲𝒂̲𝒏̲𝒄̲𝒆̲ &𝑭̲𝒍̲𝒊̲𝒓̲𝒕̲'
-    + _PAD * 16 + _PUZZLE_R1 + '\n'
+    + _PAD * 22 + _PUZZLE_R1 + '\n'
     '<tg-emoji emoji-id="5258508428212445001">✨</tg-emoji> 𝟮𝟬+ 𝗚̲𝗮̲𝗺̲𝗲̲𝘀̲ 𝗔̲𝘃̲𝗮̲𝗶̲𝗹̲𝗮̲𝗯̲𝗹̲𝗲'
     + _PAD * 16 + _PUZZLE_R2 + '\n\n'
     '<tg-emoji emoji-id="6124898345082165755">✨</tg-emoji> 𝑪𝒉𝒂𝒕 • 𝑭𝒍𝒊𝒓𝒕 • 𝑷𝒍𝒂𝒚 '
