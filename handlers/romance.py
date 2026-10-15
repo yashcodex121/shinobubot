@@ -22,6 +22,11 @@ PROPOSE_GIFS = [
     "CgACAgQAAxkBAAPcas83ZpnOIfMSxcWLzmNTaXB5iSEAAjMFAAKR221QTvfqrOlmgQk9BA",
 ]
 
+# GIF for /couple (numeric code 100002 — raw file_id from the file_ids map)
+COUPLE_GIFS = [
+    "CgACAgQAAyEFAAMBB2aJIQACAsRq0L4OMhRyn_DiRbW-LYl45eYZWQAC3QUAAv05lFF7FJihZpdcTz0E",
+]
+
 
 async def propose(update, ctx):
     me, tgt = update.effective_user, reply_target(update)
@@ -144,7 +149,7 @@ async def couple(update, ctx):
     )
     markup = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
     await msg.reply_animation(
-        animation=random.choice(PROPOSE_GIFS),
+        animation=random.choice(COUPLE_GIFS),
         caption=text,
         parse_mode=HTML,
         reply_markup=markup,
