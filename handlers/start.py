@@ -1,7 +1,6 @@
 import re
 
 from telegram.constants import ParseMode
-from telegram.error import BadRequest
 from telegram.ext import CommandHandler
 
 from database import mongo, users
@@ -9,8 +8,8 @@ from keyboards.main_menu import start_menu
 
 HTML = ParseMode.HTML
 
-# Photo link for the /start card (empty = text only until the owner drops a URL here)
-WELCOME_PHOTO = ""
+# Banner video for /start (direct mp4 URL; empty = text-only card)
+WELCOME_VIDEO = "https://files.catbox.moe/67cn97.mp4"
 
 # The fancy welcome card — [NNN] numbers are premium (custom) emoji ids
 _WELCOME = (
@@ -36,17 +35,23 @@ async def start(update, ctx):
 
     msg = update.effective_message
     markup = start_menu(ctx.bot.username)
-    try:
-        if WELCOME_PHOTO:
-            await msg.reply_photo(WELCOME_PHOTO, caption=_WELCOME, parse_mode=HTML, reply_markup=markup)
-        else:
-            await msg.reply_text(_WELCOME, parse_mode=HTML, reply_markup=markup)
-    except BadRequest:
-        # custom emoji rejected — same card without premium emojis
-        if WELCOME_PHOTO:
-            await msg.reply_photo(WELCOME_PHOTO, caption=_plain(_WELCOME), parse_mode=HTML, reply_markup=markup)
-        else:
-            await msg.reply_text(_plain(_WELCOME), parse_mode=HTML, reply_markup=markup)
+    # try: video+premium card -> video+plain card -> text+premium -> text plain
+    video = WELCOME_VIDEO
+    attempts = []
+    if video:
+        attempts += [("video", _WELCOME), ("video", _plain(_WELCOME))]
+    attempts += [("text", _WELCOME), ("text", _plain(_WELCOME))]
+    for kind, body in attempts:
+        try:
+            if kind == "video":
+                await msg.reply_video(
+                    video, caption=body, parse_mode=HTML,
+                    reply_markup=markup, supports_streaming=True)
+            else:
+                await msg.reply_text(body, parse_mode=HTML, reply_markup=markup)
+            return
+        except Exception:
+            continue  # next fallback — the last plain-text attempt always delivers
 
 
 def register(app):
