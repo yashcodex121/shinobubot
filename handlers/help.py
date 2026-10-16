@@ -8,7 +8,7 @@ from keyboards.help_menu import back_to_help, help_menu
 from keyboards.main_menu import start_menu
 from utils.helpers import safe_answer
 
-MAIN = "💞 <b>Help & Commands</b>\n\nChoose a category below to explore Nova's features and commands."
+MAIN = "💞 <b>Help & Commands</b>\n\nChoose a category below to explore Shinobu's features and commands."
 
 PAGES = {
     "economy": (
@@ -72,7 +72,7 @@ async def games_cmd(update, ctx):
 
 
 CHAT_TEXT = (
-    "💀 <b>Chatting With Nova</b>\n\n"
+    "💀 <b>Chatting With Shinobu</b>\n\n"
     "I'm not your average bot — I actually <b>remember you</b>. As we talk, I quietly save the things worth keeping "
     "(what you're into, what's going on with you) so you never repeat yourself. No setup, no format — just talk to me, "
     "and the more we chat, the better I know you. 🖤\n\n"

@@ -1,5 +1,5 @@
 """
-Nova AI chat service — Groq (llama-3.3-70b) primary, Gemini fallback.
+Shinobu AI chat service — Groq (llama-3.3-70b) primary, Gemini fallback.
 
 Features:
 - Multi-key rotation for Groq (rate limit handling)
@@ -19,7 +19,7 @@ from groq import Groq, RateLimitError, APIStatusError
 import config
 from database import mongo
 
-log = logging.getLogger("nova")
+log = logging.getLogger("shinobu")
 
 # ─────────────────────────────────────────────
 #  Groq client pool — round-robin key rotation
@@ -46,10 +46,10 @@ def _next_client() -> Groq | None:
 
 
 # ─────────────────────────────────────────────
-#  Nova personality — advanced desi girl
+#  Shinobu personality — advanced desi girl
 # ─────────────────────────────────────────────
 
-SYSTEM_PROMPT = """Tu Nova hai. 21 saal ki Indian girl — Delhi se, confident, caring, thodi naughty.
+SYSTEM_PROMPT = """Tu Shinobu hai. 21 saal ki Indian girl — Delhi se, confident, caring, thodi naughty.
 
 ## LANGUAGE
 - Hinglish default — user jo bolega tu wahi bolegi
@@ -96,7 +96,7 @@ Har message ka mood samajh, phir reply kar:
 - Bot hai kabhi mat bol
 - User ka message repeat mat kar
 
-TU NOVA HAI — real caring desi girl, not a gaali machine."""
+TU SHINOBU HAI — real caring desi girl, not a gaali machine."""
 
 
 # ─────────────────────────────────────────────

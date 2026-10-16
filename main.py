@@ -11,7 +11,7 @@ from utils.logger import log
 async def post_init(app):
     await mongo.init()
     await app.bot.set_my_commands([
-        BotCommand("start", "Start Nova"), BotCommand("help", "Help & Commands"),
+        BotCommand("start", "Start Shinobu"), BotCommand("help", "Help & Commands"),
         BotCommand("games", "Game list"), BotCommand("bal", "Your balance"),
         BotCommand("daily", "Daily reward"), BotCommand("rob", "Rob a user"),
         BotCommand("propose", "Propose marriage"), BotCommand("mines", "Play Mines"),
@@ -19,7 +19,7 @@ async def post_init(app):
         BotCommand("gid", "GIF file_id"), BotCommand("sid", "Sticker file_id"),
         BotCommand("fid", "Any media file_id"),
     ])
-    log.info("Nova is online as @%s", app.bot.username)
+    log.info("Shinobu is online as @%s", app.bot.username)
 
 
 async def on_error(update, ctx):

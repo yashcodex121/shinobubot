@@ -25,7 +25,7 @@ async def guard(update, ctx):
     s = await mongo.db.settings.find_one({"_id": "maintenance"})
     if s and s.get("on"):
         if update.effective_message and update.effective_message.text and update.effective_message.text.startswith("/"):
-            await update.effective_message.reply_text("🛠️ Nova is under maintenance. Back soon!")
+            await update.effective_message.reply_text("🛠️ Shinobu is under maintenance. Back soon!")
         raise ApplicationHandlerStop
 
 
@@ -42,7 +42,7 @@ async def _stats_text():
     g = await mongo.db.group_members.distinct("chat")
     tx = await mongo.db.transactions.count_documents({})
     m = await mongo.db.marriages.count_documents({"status": "active"})
-    return f"📊 <b>Nova stats</b>\n👤 Users: {u}\n👥 Groups seen: {len(g)}\n💸 Transactions: {tx}\n💍 Marriages: {m}"
+    return f"📊 <b>Shinobu stats</b>\n👤 Users: {u}\n👥 Groups seen: {len(g)}\n💸 Transactions: {tx}\n💍 Marriages: {m}"
 
 
 async def _dash_kb():

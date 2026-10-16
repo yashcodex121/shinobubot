@@ -1,14 +1,14 @@
 """
-Nova chat handler — all chat commands + AI message listener.
+Shinobu chat handler — all chat commands + AI message listener.
 
 Commands:
-  /checkins on|off   — toggle Nova's occasional check-in messages
+  /checkins on|off   — toggle Shinobu's occasional check-in messages
   /reactions on|off  — toggle emoji reactions on user messages
-  /quiet             — Nova goes quiet in group (just for you)
-  /chatty            — Nova joins in more in group (just for you)
-  /groupbot on|off   — admin: toggle Nova for entire group
+  /quiet             — Shinobu goes quiet in group (just for you)
+  /chatty            — Shinobu joins in more in group (just for you)
+  /groupbot on|off   — admin: toggle Shinobu for entire group
   /groupmode quiet|chatty|normal — admin: set group-wide chat mode
-  /forget            — clear your conversation memory with Nova
+  /forget            — clear your conversation memory with Shinobu
 """
 
 import asyncio
@@ -40,7 +40,7 @@ from services.chat_service import (
 )
 from utils.permissions import is_admin
 
-# Emoji reactions Nova can send
+# Emoji reactions Shinobu can send
 REACTIONS = ["❤️", "🔥", "😂", "👀", "💀", "🫡", "🤙", "😭", "✨", "🥺"]
 
 
@@ -74,7 +74,7 @@ def _bot_mentioned(update: Update, bot_username: str) -> bool:
     return False
 
 
-# While a word-game round is live (Jumble/Wordscramble/WordSeek), Nova stays
+# While a word-game round is live (Jumble/Wordscramble/WordSeek), Shinobu stays
 # out of the way: guesses are judged by the game modules, so her random AI
 # replies would only spam over the game. Word rounds expire on their own
 # timer; a forgotten WordSeek round (no timer, ended by a correct guess or
@@ -91,7 +91,7 @@ def _game_ai_muted(chat_id: int) -> bool:
 
 
 async def _should_respond_group(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> bool:
-    """Decide whether Nova should respond in a group message."""
+    """Decide whether Shinobu should respond in a group message."""
     chat_id = update.effective_chat.id
     user_id = update.effective_user.id
     bot_username = ctx.bot.username
@@ -199,7 +199,7 @@ async def cmd_groupbot(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return await msg.reply_text("Usage: /groupbot on|off")
     val = args[0].lower() == "on"
     await set_group_setting(update.effective_chat.id, "enabled", val)
-    msg_text = "✅ Nova is active in this group." if val else "🔕 Nova has gone silent in this group."
+    msg_text = "✅ Shinobu is active in this group." if val else "🔕 Shinobu has gone silent in this group."
     await msg.reply_text(msg_text)
 
 
@@ -246,7 +246,7 @@ async def on_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     is_private = _is_private(update)
 
-    # Group: check if Nova should respond
+    # Group: check if Shinobu should respond
     if not is_private:
         if not await _should_respond_group(update, ctx):
             return

@@ -1,4 +1,4 @@
-# 💞 Nova Bot
+# 💞 Shinobu Bot
 
 Telegram bot: Economy, Actions, Romance, Games, Admin — MongoDB + python-telegram-bot v22.
 
