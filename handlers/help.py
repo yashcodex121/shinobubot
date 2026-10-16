@@ -2,6 +2,7 @@ from telegram.constants import ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
+from handlers.start import send_welcome
 from keyboards.games_menu import GAME_MAP, game_page_menu, games_menu
 from keyboards.help_menu import back_to_help, help_menu
 from keyboards.main_menu import start_menu
@@ -64,19 +65,6 @@ async def games_cmd(update, ctx):
         parse_mode=ParseMode.HTML, reply_markup=games_menu())
 
 
-def _start_text(name: str) -> str:
-    return (
-        f"✨ Hey <b>{name}</b> , I'm Nova 💜\n\n"
-        "Not your average bot — I actually feel like a real one. 🙂\n\n"
-        "🌀 <b>I remember you</b> — our chats, your vibe, where we left off.\n"
-        "🌑 <b>I talk like a person</b>, never a script — sweet when you're sweet, savage when you're not.\n"
-        "🔔 <b>I check in too</b> — go quiet on me and I might text first. 🎃\n\n"
-        "Oh, and I run the fun around here:\n"
-        "🎮 20+ games • 🍊 a living economy • 💝 ship, marry &amp; drama\n\n"
-        "Tap <b>Help</b> to see it all, or add me to your group 👇"
-    )
-
-
 CHAT_TEXT = (
     "💀 <b>Chatting With Nova</b>\n\n"
     "I'm not your average bot — I actually <b>remember you</b>. As we talk, I quietly save the things worth keeping "
@@ -111,9 +99,12 @@ async def on_help(update, ctx):
     if page == "main":
         await _safe_edit(q, MAIN, reply_markup=help_menu())
     elif page == "start":
-        import html as _html
-        name = _html.escape(q.from_user.first_name)
-        await _safe_edit(q, _start_text(name), reply_markup=start_menu(ctx.bot.username))
+        # Back to Main: restore the video welcome banner (not the old text card)
+        if await send_welcome(q.message.chat, start_menu(ctx.bot.username)):
+            try:
+                await q.message.delete()
+            except Exception:
+                pass
     elif page == "games":
         await _safe_edit(q,
             "🎮 <b>Game commands</b> 🎮\n\nChoose a game below to see how to play and its commands! 👇",

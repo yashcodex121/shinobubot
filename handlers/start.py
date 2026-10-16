@@ -43,29 +43,38 @@ def _plain(text):
     return re.sub(r"<tg-emoji[^>]*>([^<]*)</tg-emoji>", r"\1", text)
 
 
-async def start(update, ctx):
-    u = update.effective_user
-    await users.ensure_user(u)
+async def send_welcome(target, markup):
+    """Deliver the welcome banner — video first, fancy card as caption.
 
-    msg = update.effective_message
-    markup = start_menu(ctx.bot.username)
-    # try: video+premium card -> video+plain card -> text+premium -> text plain
-    video = WELCOME_VIDEO
+    `target` is a Message (banner is replied to it) or a Chat (banner goes
+    straight to it). Tries video+premium card -> video+plain card ->
+    text+premium -> text plain; the last plain-text attempt always delivers.
+    Returns True if the banner was actually delivered.
+    """
+    send_video = getattr(target, "reply_video", None) or target.send_video
+    send_text = getattr(target, "reply_text", None) or target.send_message
     attempts = []
-    if video:
+    if WELCOME_VIDEO:
         attempts += [("video", _WELCOME), ("video", _plain(_WELCOME))]
     attempts += [("text", _WELCOME), ("text", _plain(_WELCOME))]
     for kind, body in attempts:
         try:
             if kind == "video":
-                await msg.reply_video(
-                    video, caption=body, parse_mode=HTML,
+                await send_video(
+                    WELCOME_VIDEO, caption=body, parse_mode=HTML,
                     reply_markup=markup, supports_streaming=True)
             else:
-                await msg.reply_text(body, parse_mode=HTML, reply_markup=markup)
-            return
+                await send_text(body, parse_mode=HTML, reply_markup=markup)
+            return True
         except Exception:
             continue  # next fallback — the last plain-text attempt always delivers
+    return False
+
+
+async def start(update, ctx):
+    u = update.effective_user
+    await users.ensure_user(u)
+    await send_welcome(update.effective_message, start_menu(ctx.bot.username))
 
 
 def register(app):
