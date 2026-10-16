@@ -17,6 +17,10 @@ def _keys(name):
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "nova_bot")
+
+# Channel buttons shown on menus (full t.me URLs) — override in .env
+SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/NovaSupport")
+UPDATES_CHANNEL = os.getenv("UPDATES_CHANNEL", "https://t.me/NovaUpdates")
 OWNER_IDS = _ids("OWNER_IDS")
 ADMIN_IDS = _ids("ADMIN_IDS") | OWNER_IDS
 

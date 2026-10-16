@@ -19,6 +19,7 @@ from pymongo.errors import DuplicateKeyError
 from telegram.constants import ParseMode
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, filters
 
+import config
 from database import mongo
 from keyboards.ui import BLUE, btn, kb
 from utils.logger import log
@@ -111,7 +112,7 @@ async def _num_of(file_id: str) -> int:
 
 def _support_btn():
     """Blue Support button -> the support group (same as admin.py)."""
-    return btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)
+    return btn("🔧 Support", url=config.SUPPORT_CHANNEL, style=BLUE)
 
 
 def _support_kb():

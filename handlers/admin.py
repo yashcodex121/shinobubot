@@ -106,7 +106,7 @@ async def get_file_id(update, ctx):
     else:
         return
 
-    support_kb = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+    support_kb = kb([[btn("🔧 Support", url=config.SUPPORT_CHANNEL, style=BLUE)]])
     await msg.reply_text(
         f"{file_type}\n<code>{await _num_of(file_id)}</code>",
         parse_mode=HTML,
@@ -117,7 +117,7 @@ async def get_file_id(update, ctx):
 async def get_id(update, ctx):
     """Send user/chat ID. If reply — show replied user's ID."""
     msg = update.effective_message
-    support_kb = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+    support_kb = kb([[btn("🔧 Support", url=config.SUPPORT_CHANNEL, style=BLUE)]])
 
     if msg.reply_to_message and msg.reply_to_message.from_user:
         u = msg.reply_to_message.from_user
@@ -190,7 +190,7 @@ async def addsudo(update, ctx):
         text = f"✅ {label} added to sudolist"
     await msg.reply_text(
         text, parse_mode=HTML,
-        reply_markup=kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=GREEN)]]))
+        reply_markup=kb([[btn("🔧 Support", url=config.SUPPORT_CHANNEL, style=GREEN)]]))
 
 
 # Verified Telegram file_id (same source the propose GIFs use — stable across restarts)
@@ -214,7 +214,7 @@ async def sudolist(update, ctx):
         who = html.escape(_fancy(name)) if name else None
         lines.append(f"{i}➤ " + " ".join(x for x in (who, f"<code>{uid}</code>") if x))
     text = "ꜱᴜᴅᴏ ᴜꜱᴇʀꜱ :\n" + "\n".join(lines or ["No sudos yet."])
-    markup = kb([[btn("Support", url="https://t.me/NovaSupport", style=RED),
+    markup = kb([[btn("Support", url=config.SUPPORT_CHANNEL, style=RED),
                   btn("Add me", url=f"https://t.me/{ctx.bot.username}?startgroup=true", style=BLUE)]])
     try:
         await update.effective_message.reply_animation(

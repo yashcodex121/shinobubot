@@ -147,7 +147,7 @@ async def couple(update, ctx):
         f'<a href="tg://user?id={b["uid"]}">{html.escape(b["name"])}</a>\n\n'
         f'Potential: {bar} <b>{score}%</b>'
     )
-    markup = kb([[btn("🔧 Support", url="https://t.me/NovaSupport", style=BLUE)]])
+    markup = kb([[btn("🔧 Support", url=config.SUPPORT_CHANNEL, style=BLUE)]])
     await msg.reply_animation(
         animation=random.choice(COUPLE_GIFS),
         caption=text,
