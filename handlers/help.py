@@ -2,7 +2,7 @@ from telegram.constants import ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
-from handlers.start import send_welcome
+from handlers.start import WELCOME_CARD, WELCOME_CARD_PLAIN
 from keyboards.games_menu import GAME_MAP, game_page_menu, games_menu
 from keyboards.help_menu import back_to_help, help_menu
 from keyboards.main_menu import start_menu
@@ -40,19 +40,25 @@ PAGES = {
 
 
 async def _safe_edit(q, text, parse_mode=ParseMode.HTML, reply_markup=None):
-    """Edit message text. If message has media (no text), delete and send fresh."""
+    """Edit the message **in place** — never delete + re-create.
+
+    The welcome banner is a video message, so its text lives in the caption:
+    media messages get `edit_message_caption`, plain text messages get
+    `edit_message_text`. Same message, same position in the chat.
+    """
+    msg = q.message
+    is_media = any(getattr(msg, m, None) for m in
+                   ("video", "photo", "animation", "document", "audio", "voice", "video_note"))
     try:
-        await q.edit_message_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
-    except BadRequest as e:
-        err = str(e).lower()
-        if "no text" in err or "message is not modified" in err:
-            try:
-                await q.message.delete()
-            except Exception:
-                pass
-            await q.message.chat.send_message(text, parse_mode=parse_mode, reply_markup=reply_markup)
+        if is_media:
+            await q.edit_message_caption(caption=text, parse_mode=parse_mode,
+                                         reply_markup=reply_markup)
         else:
-            raise
+            await q.edit_message_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+    except BadRequest as e:
+        if "message is not modified" in str(e).lower():
+            return  # already showing this page — nothing to do
+        raise
 
 
 async def help_cmd(update, ctx):
@@ -99,12 +105,15 @@ async def on_help(update, ctx):
     if page == "main":
         await _safe_edit(q, MAIN, reply_markup=help_menu())
     elif page == "start":
-        # Back to Main: restore the video welcome banner (not the old text card)
-        if await send_welcome(q.message.chat, start_menu(ctx.bot.username)):
+        # Back to Main: edit the same message back to the welcome card.
+        # Premium emoji first, plain fallback if custom emoji is rejected.
+        markup = start_menu(ctx.bot.username)
+        for body in (WELCOME_CARD, WELCOME_CARD_PLAIN):
             try:
-                await q.message.delete()
-            except Exception:
-                pass
+                await _safe_edit(q, body, reply_markup=markup)
+                break
+            except BadRequest:
+                continue
     elif page == "games":
         await _safe_edit(q,
             "🎮 <b>Game commands</b> 🎮\n\nChoose a game below to see how to play and its commands! 👇",

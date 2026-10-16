@@ -39,8 +39,13 @@ _WELCOME = (
 
 def _plain(text):
     """Drop tg-emoji entities (keep the fallback emoji) — used if this bot
-    can't send custom emoji (owner without Telegram Premium, dead id, ...)."""
+can't send custom emoji (owner without Telegram Premium, dead id, ...)."""
     return re.sub(r"<tg-emoji[^>]*>([^<]*)</tg-emoji>", r"\1", text)
+
+
+# Public variants of the welcome card (for editing a message back to main)
+WELCOME_CARD = _WELCOME
+WELCOME_CARD_PLAIN = _plain(_WELCOME)
 
 
 async def send_welcome(target, markup):
